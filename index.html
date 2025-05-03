@@ -1,0 +1,1679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EMI & DBR Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#5D5CDE',
+                        secondary: '#4949c9',
+                        lightblue: '#caf0f8',
+                        lightgreen: '#d8f3dc',
+                        lightyellow: '#ffedd8',
+                        lightred: '#ffccd5',
+                        lightgray: '#f3f4f6'
+                    }
+                }
+            },
+            darkMode: 'class'
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+    <div class="container mx-auto px-4 py-8 max-w-6xl" id="printableArea">
+        <h1 class="text-3xl font-bold text-center text-primary dark:text-white mb-8">DBR & EMI CALCULATOR</h1>
+        
+        <!-- Top Navigation -->
+        <div class="flex justify-end mb-4">
+            <a href="https://script.google.com/macros/s/AKfycbzCIvQgNS4IbX8WprsPgoLhGeIArty0OTeRfTgmPsRZ9y7X1MQPnvdzUL3rOp9tAUvd/exec" class="bg-primary text-white p-3 rounded-md hover:bg-opacity-80">Back to Main App</a>
+        </div>
+        
+        <!-- WhatsApp & Print Integration -->
+        <div class="mb-8 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border-l-4 border-primary">
+            <h2 class="text-2xl font-bold text-primary dark:text-white mb-6">SHARE DETAILS</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center mb-4">
+                <label class="text-gray-700 dark:text-gray-300 font-medium">WhatsApp Number:</label>
+                <input type="tel" id="whatsappNumber" placeholder="Enter WhatsApp number" class="md:col-span-2 border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white">
+            </div>
+            
+            <div class="flex flex-wrap justify-center gap-4">
+                <button id="showEmiChartBtn" class="bg-yellow-400 text-white p-3 rounded-md hover:bg-opacity-80 text-base">EMI Payment Chart</button>
+                <button id="sendWhatsAppBtn" class="bg-green-500 text-white p-3 rounded-md hover:bg-opacity-80 text-base">Send To WhatsApp</button>
+                <button id="printBtn" class="bg-blue-500 text-white p-3 rounded-md hover:bg-opacity-80 text-base">Print Page</button>
+                <button id="exportPdfBtn" class="bg-blue-800 text-white p-3 rounded-md hover:bg-opacity-80 text-base">Export PDF</button>
+                <button id="loanComparisonBtn" class="bg-purple-800 text-white p-3 rounded-md hover:bg-opacity-80 text-base">Compare Loans</button>
+            </div>
+        </div>
+        
+        <!-- Main Calculator Container -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <!-- Left Column - DBR Calculator -->
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border-l-4 border-primary">
+                <h2 class="text-2xl font-bold text-primary dark:text-white mb-6">DBR CALCULATOR</h2>
+                
+                <div class="space-y-4">
+                    <div class="grid grid-cols-3 gap-4 items-center">
+                        <label class="text-gray-700 dark:text-gray-300 font-medium">SALARY (AED):</label>
+                        <input type="number" id="salary" class="col-span-2 border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white">
+                    </div>
+                    
+                    <!-- Add-back section -->
+                    <div id="addbacks-container">
+                        <div class="grid grid-cols-3 gap-4 items-center addback-entry">
+                            <label class="text-gray-700 dark:text-gray-300 font-medium">Add-back:</label>
+                            <div class="col-span-2">
+                                <select class="addback-type border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white w-full">
+                                    <option value="">Select Add-back Type</option>
+                                    <option value="hra">HRA</option>
+                                    <option value="airfare">Airfare Allowance</option>
+                                    <option value="overtime">Over-time</option>
+                                    <option value="servicecharge">Service Charge</option>
+                                    <option value="incentives">Incentives</option>
+                                    <option value="telephone">Telephone Allowance</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="dynamic-addback-fields"></div>
+                    
+                    <div class="flex justify-start gap-2 mb-4">
+                        <button id="addMoreAddbackBtn" class="bg-primary text-white p-2 rounded-md hover:bg-opacity-80">+ Add More</button>
+                        <button id="removeAddbackBtn" class="bg-secondary text-white p-2 rounded-md hover:bg-opacity-80 disabled:opacity-50" disabled>- Remove</button>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-4 items-center">
+                        <label class="text-gray-700 dark:text-gray-300 font-medium">Gross Salary:</label>
+                        <input type="text" id="grossSalary" class="col-span-2 border rounded-md p-2 bg-lightgray dark:bg-gray-700 dark:text-white" readonly>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-4 items-center">
+                        <label class="text-gray-700 dark:text-gray-300 font-medium">Allowed Liability:</label>
+                        <input type="text" id="allowedLiability" class="col-span-2 border rounded-md p-2 bg-lightgray dark:bg-gray-700 dark:text-white" readonly>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-4 items-center">
+                        <label class="text-gray-700 dark:text-gray-300 font-medium">DBR %:</label>
+                        <div class="col-span-2 flex items-center">
+                            <input type="text" id="dbrPercentage" class="border rounded-md p-2 bg-lightgray dark:bg-gray-700 dark:text-white" readonly>
+                            <span id="dbrWarning" class="ml-2 text-red-600 dark:text-red-400 font-bold hidden">High DBR!</span>
+                        </div>
+                    </div>
+                    
+                    <button id="addExistingLoanBtn" class="bg-primary text-white p-2 rounded-md hover:bg-opacity-80 w-full">+ Existing Loans</button>
+                    
+                    <!-- Existing Loans Container -->
+                    <div id="existingLoansContainer" class="mt-2 space-y-2 hidden">
+                    </div>
+
+                    <!-- Credit Cards Section -->
+                    <div id="creditCardsContainer">
+                        <div class="grid grid-cols-3 gap-4 items-center credit-card-entry">
+                            <label class="text-gray-700 dark:text-gray-300 font-medium">Credit Card 1:</label>
+                            <div class="col-span-2 flex gap-2">
+                                <select class="border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white w-1/3">
+                                    <option value="ADCB">ADCB</option>
+                                    <option value="ENBD">ENBD</option>
+                                    <option value="EIB">EIB</option>
+                                    <option value="FAB">FAB</option>
+                                    <option value="ADIB">ADIB</option>
+                                    <option value="CBD">CBD</option>
+                                    <option value="CITI">CITI</option>
+                                    <option value="SCB">SCB</option>
+                                    <option value="MASHREQ">MASHREQ</option>
+                                    <option value="DIB">DIB</option>
+                                    <option value="OTHER">OTHER</option>
+                                </select>
+                                <div class="flex flex-col w-2/3 space-y-1">
+                                    <input type="number" placeholder="Credit Limit" class="credit-card-amount border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white">
+                                    <input type="number" placeholder="Outstanding" class="credit-card-outstanding border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-2">
+                        <button id="addCreditCardBtn" class="bg-primary text-white p-2 rounded-md hover:bg-opacity-50">+ Add Card</button>
+                        <button id="removeCreditCardBtn" class="bg-secondary text-white p-2 rounded-md hover:bg-opacity-80 disabled:opacity-50" disabled>- Remove Card</button>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-4 items-center">
+                        <label class="text-gray-700 dark:text-gray-300 font-medium">Total CC Limit:</label>
+                        <input type="text" id="totalCCLimit" class="col-span-2 border rounded-md p-2 bg-lightgray dark:bg-gray-700 dark:text-white" readonly>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-4 items-center">
+                        <label class="text-gray-700 dark:text-gray-300 font-medium">DBR Of Credit Card:</label>
+                        <input type="text" id="dbrCC" class="col-span-2 border rounded-md p-2 bg-lightgray dark:bg-gray-700 dark:text-white" readonly>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-4 items-center">
+                        <label class="text-gray-700 dark:text-gray-300 font-medium">Total Liabilities:</label>
+                        <input type="text" id="totalLiabilities" class="col-span-2 border rounded-md p-2 bg-lightgray dark:bg-gray-700 dark:text-white" readonly>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-4 items-center">
+                        <label class="text-gray-700 dark:text-gray-300 font-medium">Available Liability:</label>
+                        <input type="text" id="availableLiability" class="col-span-2 border rounded-md p-2 bg-lightgray dark:bg-gray-700 dark:text-white" readonly>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-4 items-center">
+                        <label class="text-gray-700 dark:text-gray-300 font-medium">New Total Liabilities:</label>
+                        <input type="text" id="newTotalLiabilities" class="col-span-2 border rounded-md p-2 bg-lightgray dark:bg-gray-700 dark:text-white" readonly>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-4 items-center">
+                        <label class="text-gray-700 dark:text-gray-300 font-medium">Special Note:</label>
+                        <textarea id="specialNote" class="col-span-2 w-full border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white" rows="3"></textarea>
+                    </div>
+                    
+                    <div id="ccSuggestionContainer" class="border border-primary p-3 rounded-lg mt-4 hidden">
+                        <h3 class="text-lg font-bold text-primary mb-2">CREDIT CARD SUGGESTION</h3>
+                        <p id="ccSuggestionText" class="text-gray-700 dark:text-gray-300"></p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Column - EMI Calculator -->
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border-l-4 border-primary">
+                <h2 class="text-2xl font-bold text-primary dark:text-white mb-6">EMI CALCULATOR</h2>
+                
+                <div class="space-y-4">
+                    <div class="grid grid-cols-3 gap-4 items-center">
+                        <label class="text-gray-700 dark:text-gray-300 font-medium">Loan Type:</label>
+                        <select id="loanType" class="col-span-2 border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white">
+                            <option value="fresh">Fresh (0-60 days)</option>
+                            <option value="topup">Top-up (0-60 days)</option>
+                            <option value="takeover">Take over (0-90 days)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-4 items-center">
+                        <label class="text-gray-700 dark:text-gray-300 font-medium">Disbursal Date:</label>
+                        <input type="date" id="disbursalDate" class="col-span-2 border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white">
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-4 items-center">
+                        <label class="text-gray-700 dark:text-gray-300 font-medium">First Payment Date:</label>
+                        <input type="date" id="firstPaymentDate" class="col-span-2 border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white">
+                        <p id="dateError" class="col-span-3 text-red-600 dark:text-red-400 text-sm hidden">Error: Invalid Payment Date</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-4 items-center">
+                        <label class="text-gray-700 dark:text-gray-300 font-medium">Multiples Of Salary:</label>
+                        <input type="number" id="multiplesOfSalary" class="col-span-2 border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white" value="15">
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-4 items-center">
+                        <label class="text-gray-700 dark:text-gray-300 font-medium">Max Loan Eligibility (AED):</label>
+                        <input type="text" id="maxLoanEligibility" class="col-span-2 border rounded-md p-2 bg-lightgray dark:bg-gray-700 dark:text-white" readonly>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-4 items-center">
+                        <label class="text-gray-700 dark:text-gray-300 font-medium">Tenure:</label>
+                        <input type="number" id="tenureMonths" class="col-span-2 border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white" value="" min="1" max="300">
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-4 items-center">
+                        <label class="text-gray-700 dark:text-gray-300 font-medium">Loan Amount (AED):</label>
+                        <div class="col-span-2">
+                            <input type="number" id="loanAmount" class="w-full border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white">
+                            <p id="loanAmountError" class="text-red-600 dark:text-red-400 text-sm hidden">Error: Loan Amount Will Exceed DBR Limit!</p>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-4 items-center">
+                        <label class="text-gray-700 dark:text-gray-300 font-medium">Reducing Rate %:</label>
+                        <input type="number" id="reducingRate" step="0.01" class="col-span-2 border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white" value="">
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-4 items-center">
+                        <label class="text-gray-700 dark:text-gray-300 font-medium">Flat Rate %:</label>
+                        <input type="text" id="flatRate" step="0.01" class="col-span-2 border rounded-md p-2 bg-lightgray dark:bg-gray-700 dark:text-white" readonly>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-4 items-center">
+                        <label class="text-gray-700 dark:text-gray-300 font-medium">EMI (AED):</label>
+                        <input type="text" id="emi" step="0.01" class="col-span-2 border rounded-md p-2 bg-lightgray dark:bg-gray-700 dark:text-white" readonly>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-4 items-center">
+                        <label class="text-gray-700 dark:text-gray-300 font-medium">Total Payment (AED):</label>
+                        <input type="text" id="totalPayment" step="0.01" class="col-span-2 border rounded-md p-2 bg-lightgray dark:bg-gray-700 dark:text-white" readonly>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-4 items-center">
+                        <label class="text-gray-700 dark:text-gray-300 font-medium">Total Interest (AED):</label>
+                        <input type="text" id="totalInterest" step="0.01" class="col-span-2 border rounded-md p-2 bg-lightgray dark:bg-gray-700 dark:text-white" readonly>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-4 items-center">
+                        <label class="text-gray-700 dark:text-gray-300 font-medium">Processing Fees + VAT (AED):</label>
+                        <input type="text" id="processingFees" step="0.01" class="col-span-2 border rounded-md p-2 bg-lightgray dark:bg-gray-700 dark:text-white" readonly>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-4 items-center">
+                        <label class="text-gray-700 dark:text-gray-300 font-medium">Total Outstanding:</label>
+                        <input type="text" id="totalOutstanding" class="col-span-2 border rounded-md p-2 bg-lightgray dark:bg-gray-700 dark:text-white" readonly>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-4 items-center">
+                        <label class="text-gray-700 dark:text-gray-300 font-medium">Cash In Hand - NetPay (AED):</label>
+                        <input type="text" id="cashInHand" step="0.01" class="col-span-2 border rounded-md p-2 bg-lightgray dark:bg-gray-700 dark:text-white" readonly>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4 mt-6">
+                        <button id="findOptimalLoanBtn" class="bg-primary text-white p-3 rounded-md hover:bg-opacity-80 text-base">Find Optimal Loan Amount</button>
+                        <button id="resetBtn" class="bg-gray-500 text-white p-3 rounded-md hover:bg-opacity-80 text-base">Reset</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- EMI Chart Section -->
+        <div id="emiChartSection" class="mt-8 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border-l-4 border-primary hidden">
+            <h2 class="text-2xl font-bold text-primary dark:text-white mb-6">EMI PAYMENT SCHEDULE</h2>
+            <div class="relative" style="height: 400px;">
+                <canvas id="emiChart"></canvas>
+            </div>
+            <div class="mt-6 overflow-x-auto">
+                <table class="w-full border-collapse text-sm">
+                    <thead>
+                        <tr class="bg-primary text-white">
+                            <th class="border border-gray-300 p-2">Month</th>
+                            <th class="border border-gray-300 p-2">EMI (AED)</th>
+                            <th class="border border-gray-300 p-2">Principal (AED)</th>
+                            <th class="border border-gray-300 p-2">Interest (AED)</th>
+                            <th class="border border-gray-300 p-2">Balance (AED)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="emiScheduleBody">
+                        <!-- Will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Loan Comparison Section -->
+        <div id="loanComparisonSection" class="mt-8 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border-l-4 border-primary hidden">
+            <h2 class="text-2xl font-bold text-primary dark:text-white mb-6">LOAN COMPARISON</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Bank 1 -->
+                <div class="space-y-4">
+                    <h3 class="text-xl font-semibold text-primary dark:text-white">Bank 1</h3>
+                    
+                    <div class="grid grid-cols-3 gap-4 items-center">
+                        <label class="text-gray-700 dark:text-gray-300 font-medium">Bank Name:</label>
+                        <input type="text" id="bank1Name" class="col-span-2 border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white">
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-4 items-center">
+                        <label class="text-gray-700 dark:text-gray-300 font-medium">Loan Amount (AED):</label>
+                        <input type="number" id="bank1LoanAmount" class="col-span-2 border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white">
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-4 items-center">
+                        <label class="text-gray-700 dark:text-gray-300 font-medium">Tenure (Months):</label>
+                        <input type="number" id="bank1Tenure" class="col-span-2 border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white">
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-4 items-center">
+                        <label class="text-gray-700 dark:text-gray-300 font-medium">Reducing Rate (%):</label>
+                        <input type="number" id="bank1Rate" step="0.01" class="col-span-2 border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white">
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-4 items-center">
+                        <label class="text-gray-700 dark:text-gray-300 font-medium">EMI (AED):</label>
+                        <input type="text" id="bank1EMI" step="0.01" class="col-span-2 border rounded-md p-2 bg-lightgray dark:bg-gray-700 dark:text-white" readonly>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-4 items-center">
+                        <label class="text-gray-700 dark:text-gray-300 font-medium">Total Interest (AED):</label>
+                        <input type="text" id="bank1TotalInterest" step="0.01" class="col-span-2 border rounded-md p-2 bg-lightgray dark:bg-gray-700 dark:text-white" readonly>
+                    </div>
+                </div>
+                
+                <!-- Bank 2 -->
+                <div class="space-y-4">
+                    <h3 class="text-xl font-semibold text-primary dark:text-white">Bank 2</h3>
+                    
+                    <div class="grid grid-cols-3 gap-4 items-center">
+                        <label class="text-gray-700 dark:text-gray-300 font-medium">Bank Name:</label>
+                        <input type="text" id="bank2Name" class="col-span-2 border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white">
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-4 items-center">
+                        <label class="text-gray-700 dark:text-gray-300 font-medium">Loan Amount (AED):</label>
+                        <input type="number" id="bank2LoanAmount" class="col-span-2 border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white">
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-4 items-center">
+                        <label class="text-gray-700 dark:text-gray-300 font-medium">Tenure (Months):</label>
+                        <input type="number" id="bank2Tenure" class="col-span-2 border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white">
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-4 items-center">
+                        <label class="text-gray-700 dark:text-gray-300 font-medium">Reducing Rate (%):</label>
+                        <input type="number" id="bank2Rate" step="0.01" class="col-span-2 border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white">
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-4 items-center">
+                        <label class="text-gray-700 dark:text-gray-300 font-medium">EMI (AED):</label>
+                        <input type="text" id="bank2EMI" step="0.01" class="col-span-2 border rounded-md p-2 bg-lightgray dark:bg-gray-700 dark:text-white" readonly>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-4 items-center">
+                        <label class="text-gray-700 dark:text-gray-300 font-medium">Total Interest (AED):</label>
+                        <input type="text" id="bank2TotalInterest" step="0.01" class="col-span-2 border rounded-md p-2 bg-lightgray dark:bg-gray-700 dark:text-white" readonly>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-6 p-4 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                <h3 class="text-xl font-semibold text-primary dark:text-white mb-2">COMPARISON RESULT</h3>
+                <p id="comparisonResult" class="text-gray-700 dark:text-gray-300">Enter Details For Both Banks To Compare.</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Check for dark mode preference
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+        
+        // Initialize the app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Helper function to format numbers with thousands separators
+            function formatNumber(num) {
+                return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            }
+            
+            // References to DOM elements
+            const salaryInput = document.getElementById('salary');
+            const grossSalaryInput = document.getElementById('grossSalary');
+            const allowedLiabilityInput = document.getElementById('allowedLiability');
+            const dbrPercentageInput = document.getElementById('dbrPercentage');
+            const dbrWarning = document.getElementById('dbrWarning');
+            const addExistingLoanBtn = document.getElementById('addExistingLoanBtn');
+            const existingLoansContainer = document.getElementById('existingLoansContainer');
+            const addCreditCardBtn = document.getElementById('addCreditCardBtn');
+            const removeCreditCardBtn = document.getElementById('removeCreditCardBtn');
+            const creditCardsContainer = document.getElementById('creditCardsContainer');
+            const totalCCLimitInput = document.getElementById('totalCCLimit');
+            const dbrCCInput = document.getElementById('dbrCC');
+            const totalOutstandingInput = document.getElementById('totalOutstanding');
+            const loanTypeSelect = document.getElementById('loanType');
+            const multiplesOfSalaryInput = document.getElementById('multiplesOfSalary');
+            const maxLoanEligibilityInput = document.getElementById('maxLoanEligibility');
+            const tenureMonthsInput = document.getElementById('tenureMonths');
+            const loanAmountInput = document.getElementById('loanAmount');
+            const loanAmountError = document.getElementById('loanAmountError');
+            const reducingRateInput = document.getElementById('reducingRate');
+            const flatRateInput = document.getElementById('flatRate');
+            const emiInput = document.getElementById('emi');
+            const totalPaymentInput = document.getElementById('totalPayment');
+            const totalInterestInput = document.getElementById('totalInterest');
+            const processingFeesInput = document.getElementById('processingFees');
+            const cashInHandInput = document.getElementById('cashInHand');
+            const totalLiabilitiesInput = document.getElementById('totalLiabilities');
+            const availableLiabilityInput = document.getElementById('availableLiability');
+            const newTotalLiabilitiesInput = document.getElementById('newTotalLiabilities');
+            const findOptimalLoanBtn = document.getElementById('findOptimalLoanBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const disbursalDateInput = document.getElementById('disbursalDate');
+            const firstPaymentDateInput = document.getElementById('firstPaymentDate');
+            const dateErrorMsg = document.getElementById('dateError');
+            const showEmiChartBtn = document.getElementById('showEmiChartBtn');
+            const emiChartSection = document.getElementById('emiChartSection');
+            const sendWhatsAppBtn = document.getElementById('sendWhatsAppBtn');
+            const whatsappNumberInput = document.getElementById('whatsappNumber');
+            const printBtn = document.getElementById('printBtn');
+            const exportPdfBtn = document.getElementById('exportPdfBtn');
+            const ccSuggestionContainer = document.getElementById('ccSuggestionContainer');
+            const ccSuggestionText = document.getElementById('ccSuggestionText');
+            const addbacksContainer = document.getElementById('addbacks-container');
+            const dynamicAddbackFields = document.querySelector('.dynamic-addback-fields');
+            const addMoreAddbackBtn = document.getElementById('addMoreAddbackBtn');
+            const removeAddbackBtn = document.getElementById('removeAddbackBtn');
+            const specialNote = document.getElementById('specialNote');
+            const loanComparisonBtn = document.getElementById('loanComparisonBtn');
+            const loanComparisonSection = document.getElementById('loanComparisonSection');
+            
+            // Bank comparison inputs
+            const bank1NameInput = document.getElementById('bank1Name');
+            const bank1LoanAmountInput = document.getElementById('bank1LoanAmount');
+            const bank1TenureInput = document.getElementById('bank1Tenure');
+            const bank1RateInput = document.getElementById('bank1Rate');
+            const bank1EMIInput = document.getElementById('bank1EMI');
+            const bank1TotalInterestInput = document.getElementById('bank1TotalInterest');
+            const bank2NameInput = document.getElementById('bank2Name');
+            const bank2LoanAmountInput = document.getElementById('bank2LoanAmount');
+            const bank2TenureInput = document.getElementById('bank2Tenure');
+            const bank2RateInput = document.getElementById('bank2Rate');
+            const bank2EMIInput = document.getElementById('bank2EMI');
+            const bank2TotalInterestInput = document.getElementById('bank2TotalInterest');
+            const comparisonResultText = document.getElementById('comparisonResult');
+            
+            // EMI Chart variables
+            let emiChart = null;
+            let existingLoanCount = 0;
+            
+            // Set current date for date inputs
+            const today = new Date();
+            const formattedDate = today.toISOString().split('T')[0];
+            disbursalDateInput.value = formattedDate;
+            
+            // Add one month to today's date for first payment date
+            const nextMonth = new Date(today);
+            nextMonth.setMonth(nextMonth.getMonth() + 1);
+            firstPaymentDateInput.value = nextMonth.toISOString().split('T')[0];
+            
+            // Add-back related variables
+            let addbackCount = 1;
+            let addbackData = {};
+            
+            // Existing Loans functionality
+            addExistingLoanBtn.addEventListener('click', function() {
+                existingLoansContainer.classList.remove('hidden');
+                addExistingLoan();
+            });
+            
+            function addExistingLoan() {
+                existingLoanCount++;
+                const loanDiv = document.createElement('div');
+                loanDiv.classList.add('grid', 'grid-cols-3', 'gap-4', 'items-center', 'existing-loan-entry');
+                
+                loanDiv.innerHTML = `
+                    <div>
+                        <select class="loan-type border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white w-full">
+                            <option value="Personal Loan">Personal Loan</option>
+                            <option value="Auto Loan">Auto Loan</option>
+                            <option value="Mortgage Loan">Mortgage Loan</option>
+                        </select>
+                    </div>
+                    <div class="col-span-2 flex">
+                        <input type="number" placeholder="Installment" class="loan-installment border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white w-1/2 mr-1">
+                        <input type="number" placeholder="Outstanding" class="loan-outstanding border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white w-1/2">
+                        <button class="remove-loan ml-2 bg-red-500 text-white p-2 rounded-md hover:bg-opacity-80">×</button>
+                    </div>
+                `;
+                
+                existingLoansContainer.appendChild(loanDiv);
+                
+                // Add event listener to new loan inputs
+                const newLoanInstallment = loanDiv.querySelector('.loan-installment');
+                newLoanInstallment.addEventListener('input', updateDBRCalculator);
+                
+                const newLoanOutstanding = loanDiv.querySelector('.loan-outstanding');
+                newLoanOutstanding.addEventListener('input', updateDBRCalculator);
+                
+                // Add event listener to remove button
+                const removeBtn = loanDiv.querySelector('.remove-loan');
+                removeBtn.addEventListener('click', function() {
+                    loanDiv.remove();
+                    existingLoanCount--;
+                    if (existingLoanCount === 0) {
+                        existingLoansContainer.classList.add('hidden');
+                    }
+                    updateDBRCalculator();
+                });
+            }
+
+            // Function to create the Add-back Type specific fields
+            function createAddbackTypeFields(selectElement) {
+                const addbackType = selectElement.value;
+                const addbackEntry = selectElement.closest('.addback-entry');
+                const index = Array.from(addbacksContainer.querySelectorAll('.addback-entry')).indexOf(addbackEntry);
+                
+                // Clear existing fields for this addback
+                const existingFields = document.getElementById(`addback-fields-${index}`);
+                if (existingFields) {
+                    existingFields.remove();
+                    
+                    // Clear data for this addback
+                    delete addbackData[index];
+                }
+                
+                if (!addbackType) return;
+                
+                // Create new fields container
+                const fieldsContainer = document.createElement('div');
+                fieldsContainer.id = `addback-fields-${index}`;
+                fieldsContainer.classList.add('mt-2', 'p-4', 'border', 'border-gray-200', 'dark:border-gray-600', 'rounded-lg');
+                
+                let html = '';
+                
+                // Initialize data object for this addback
+                addbackData[index] = {
+                    type: addbackType,
+                    values: {}
+                };
+                
+                switch(addbackType) {
+                    case 'hra':
+                    case 'airfare':
+                        html = `
+                            <h3 class="font-semibold mb-2 text-gray-700 dark:text-gray-300">${addbackType === 'hra' ? 'HRA' : 'Airfare Allowance'}</h3>
+                            <div class="flex items-center gap-4 mb-2">
+                                <div class="flex items-center">
+                                    <input type="radio" id="${addbackType}Yearly-${index}" name="${addbackType}Period-${index}" value="yearly" class="mr-2">
+                                    <label for="${addbackType}Yearly-${index}" class="text-gray-700 dark:text-gray-300">Yearly</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="radio" id="${addbackType}Monthly-${index}" name="${addbackType}Period-${index}" value="monthly" class="mr-2">
+                                    <label for="${addbackType}Monthly-${index}" class="text-gray-700 dark:text-gray-300">Monthly</label>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 gap-2">
+                                <div class="flex items-center">
+                                    <label class="text-gray-700 dark:text-gray-300 w-1/3">Amount:</label>
+                                    <input type="number" class="${addbackType}-amount border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white w-2/3">
+                                </div>
+                            </div>
+                        `;
+                        break;
+                    case 'overtime':
+                    case 'servicecharge':
+                    case 'incentives':
+                    case 'telephone':
+                        const title = {
+                            'overtime': 'Over-time',
+                            'servicecharge': 'Service Charge',
+                            'incentives': 'Incentives',
+                            'telephone': 'Telephone Allowance'
+                        }[addbackType];
+                        
+                        html = `<h3 class="font-semibold mb-2 text-gray-700 dark:text-gray-300">${title}</h3>`;
+                        
+                        // Create 6 input fields for 6 months
+                        html += '<div class="grid grid-cols-1 gap-2">';
+                        for (let i = 1; i <= 6; i++) {
+                            html += `
+                                <div class="flex items-center">
+                                    <label class="text-gray-700 dark:text-gray-300 w-1/3">Month ${i}:</label>
+                                    <input type="number" class="${addbackType}-amount-${i} border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white w-2/3">
+                                </div>
+                            `;
+                        }
+                        html += '</div>';
+                        break;
+                }
+                
+                fieldsContainer.innerHTML = html;
+                dynamicAddbackFields.appendChild(fieldsContainer);
+                
+                // Add event listeners to the newly created fields
+                if (addbackType === 'hra' || addbackType === 'airfare') {
+                    // Radio buttons
+                    const yearlyRadio = document.getElementById(`${addbackType}Yearly-${index}`);
+                    const monthlyRadio = document.getElementById(`${addbackType}Monthly-${index}`);
+                    
+                    yearlyRadio.addEventListener('change', updateGrossSalary);
+                    monthlyRadio.addEventListener('change', updateGrossSalary);
+                    
+                    // Amount input
+                    const amountInput = fieldsContainer.querySelector(`.${addbackType}-amount`);
+                    amountInput.addEventListener('input', updateGrossSalary);
+                } else if (['overtime', 'servicecharge', 'incentives', 'telephone'].includes(addbackType)) {
+                    // 6 month inputs
+                    for (let i = 1; i <= 6; i++) {
+                        const amountInput = fieldsContainer.querySelector(`.${addbackType}-amount-${i}`);
+                        amountInput.addEventListener('input', updateGrossSalary);
+                    }
+                }
+            }
+
+            // Function to calculate gross salary from salary and add-backs
+            function updateGrossSalary() {
+                const salary = parseFloat(salaryInput.value) || 0;
+                let totalAddbacks = 0;
+                
+                // Process each add-back
+                Object.keys(addbackData).forEach(index => {
+                    const addback = addbackData[index];
+                    const fieldsContainer = document.getElementById(`addback-fields-${index}`);
+                    
+                    if (fieldsContainer) {
+                        if (addback.type === 'hra' || addback.type === 'airfare') {
+                            const yearlyRadio = document.getElementById(`${addback.type}Yearly-${index}`);
+                            const amountInput = fieldsContainer.querySelector(`.${addback.type}-amount`);
+                            const amount = parseFloat(amountInput.value) || 0;
+                            
+                            if (amount > 0) {
+                                if (yearlyRadio && yearlyRadio.checked) {
+                                    // Yearly amount / 12
+                                    totalAddbacks += amount / 12;
+                                } else {
+                                    // Monthly amount as is
+                                    totalAddbacks += amount;
+                                }
+                            }
+                        } else if (['overtime', 'servicecharge', 'incentives', 'telephone'].includes(addback.type)) {
+                            let sixMonthTotal = 0;
+                            
+                            // Sum up all 6 months
+                            for (let i = 1; i <= 6; i++) {
+                                const amountInput = fieldsContainer.querySelector(`.${addback.type}-amount-${i}`);
+                                sixMonthTotal += parseFloat(amountInput.value) || 0;
+                            }
+                            
+                            // For Telephone Allowance, add directly to calculation
+                            if (addback.type === 'telephone') {
+                                totalAddbacks += sixMonthTotal;
+                            } else {
+                                // For others, divide by 6
+                                totalAddbacks += sixMonthTotal / 6;
+                            }
+                        }
+                    }
+                });
+                
+                // Calculate gross salary
+                const grossSalary = salary + totalAddbacks;
+                grossSalaryInput.value = formatNumber(grossSalary.toFixed(2));
+                
+                // Update other calculations that depend on salary
+                updateDBRCalculator();
+                updateEMICalculator();
+            }
+
+            // Function to calculate EMI
+            function calculateEMI(principal, rate, tenure) {
+                const monthlyRate = rate / 12 / 100;
+                const emi = principal * monthlyRate * Math.pow(1 + monthlyRate, tenure) / (Math.pow(1 + monthlyRate, tenure) - 1);
+                return isNaN(emi) || !isFinite(emi) ? 0 : emi;
+            }
+            
+            // Function to calculate processing fees
+            function calculateProcessingFees(loanAmount) {
+                // Calculate 1.05% of loan amount
+                const processingFeePercent = loanAmount * 0.0105;
+                
+                if (processingFeePercent > 2625) {
+                    return 2625;
+                } else if (processingFeePercent < 525) {
+                    return 525;
+                } else {
+                    return processingFeePercent;
+                }
+            }
+            
+            // Function to capitalize first letter only
+            function capitalizeFirstLetter(string) {
+                return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
+            }
+            
+            // Function to update DBR calculator
+            function updateDBRCalculator() {
+                const grossSalary = parseFloat(grossSalaryInput.value.replace(/,/g, '')) || 0;
+                
+                // Get existing loans installments
+                let totalExistingLoansInstallments = 0;
+                document.querySelectorAll('.loan-installment').forEach(input => {
+                    totalExistingLoansInstallments += parseFloat(input.value) || 0;
+                });
+                
+                // Get existing loans outstanding (not counted in DBR)
+                let totalExistingLoansOutstanding = 0;
+                document.querySelectorAll('.loan-outstanding').forEach(input => {
+                    totalExistingLoansOutstanding += parseFloat(input.value) || 0;
+                });
+                
+                // Calculate total credit card limit and outstanding
+                let totalCCLimit = 0;
+                let totalCCOutstanding = 0;
+                
+                document.querySelectorAll('.credit-card-entry').forEach(entry => {
+                    const limitInput = entry.querySelector('.credit-card-amount');
+                    const outstandingInput = entry.querySelector('.credit-card-outstanding');
+                    
+                    totalCCLimit += parseFloat(limitInput.value) || 0;
+                    totalCCOutstanding += parseFloat(outstandingInput.value) || 0;
+                });
+                
+                totalCCLimitInput.value = formatNumber(totalCCLimit.toFixed(2));
+                
+                // Calculate total outstanding (not counted in DBR)
+                const totalOutstanding = totalCCOutstanding + totalExistingLoansOutstanding;
+                totalOutstandingInput.value = formatNumber(totalOutstanding.toFixed(2));
+                
+                // Calculate DBR for credit cards (3% of total limit)
+                const dbrCC = totalCCLimit * 0.03;
+                dbrCCInput.value = formatNumber(dbrCC.toFixed(2));
+                
+                // Calculate allowed liability (50% of gross salary)
+                const allowedLiability = grossSalary / 2;
+                allowedLiabilityInput.value = formatNumber(allowedLiability.toFixed(2));
+                
+                // Get EMI from loan amount
+                const emi = parseFloat(emiInput.value.replace(/,/g, '')) || 0;
+                
+                // Calculate total liabilities
+                const totalLiabilities = totalExistingLoansInstallments + dbrCC;
+                totalLiabilitiesInput.value = formatNumber(totalLiabilities.toFixed(2));
+                
+                // Calculate new total liabilities (including EMI)
+                const newTotalLiabilities = totalLiabilities + emi;
+                newTotalLiabilitiesInput.value = formatNumber(newTotalLiabilities.toFixed(2));
+                
+                // Calculate available liability by subtracting total liabilities from allowed liability
+                const availableLiability = allowedLiability - newTotalLiabilities;
+                availableLiabilityInput.value = formatNumber(availableLiability.toFixed(2));
+                
+                // Calculate DBR percentage based on new total liabilities
+                const dbrPercentage = (newTotalLiabilities / grossSalary) * 100;
+                dbrPercentageInput.value = dbrPercentage.toFixed(2);
+                
+                // Show warning if DBR is high (49.99% or higher)
+                if (dbrPercentage >= 49.99) {
+                    dbrWarning.classList.remove('hidden');
+                } else {
+                    dbrWarning.classList.add('hidden');
+                }
+                
+                // Check if loan amount would exceed DBR limit
+                checkLoanAmountWithDBR();
+                
+                // Suggest optimal credit card limit
+                suggestCreditCardLimit();
+                
+                // Update Cash in Hand calculation
+                updateCashInHand();
+            }
+            
+            // Function to update Cash in Hand calculation
+            function updateCashInHand() {
+                const loanAmount = parseFloat(loanAmountInput.value) || 0;
+                const totalOutstanding = parseFloat(totalOutstandingInput.value.replace(/,/g, '')) || 0;
+                const cashInHand = loanAmount - totalOutstanding;
+                cashInHandInput.value = formatNumber(cashInHand.toFixed(2));
+            }
+            
+            // Function to check if loan amount would exceed DBR limit
+            function checkLoanAmountWithDBR() {
+                const grossSalary = parseFloat(grossSalaryInput.value.replace(/,/g, '')) || 0;
+                const loanAmount = parseFloat(loanAmountInput.value) || 0;
+                const reducingRate = parseFloat(reducingRateInput.value) || 0;
+                const tenureMonths = parseInt(tenureMonthsInput.value) || 0;
+                
+                if (grossSalary <= 0 || loanAmount <= 0) {
+                    loanAmountError.classList.add('hidden');
+                    return;
+                }
+                
+                // Calculate EMI for the loan amount
+                const emi = calculateEMI(loanAmount, reducingRate, tenureMonths);
+                
+                // Calculate total liabilities without EMI
+                
+                // Get existing loans installments
+                let totalExistingLoansInstallments = 0;
+                document.querySelectorAll('.loan-installment').forEach(input => {
+                    totalExistingLoansInstallments += parseFloat(input.value) || 0;
+                });
+                
+                // Calculate credit card DBR
+                let totalCCLimit = 0;
+                document.querySelectorAll('.credit-card-amount').forEach(input => {
+                    totalCCLimit += parseFloat(input.value) || 0;
+                });
+                
+                const dbrCC = totalCCLimit * 0.03;
+                const currentLiabilities = totalExistingLoansInstallments + dbrCC;
+                
+                // Calculate total liabilities with EMI
+                const totalLiabilitiesWithEMI = currentLiabilities + emi;
+                
+                // Calculate DBR percentage
+                const dbrPercentage = (totalLiabilitiesWithEMI / grossSalary) * 100;
+                
+                // Show error if DBR exceeds 49.99%
+                if (dbrPercentage >= 49.99) {
+                    loanAmountError.classList.remove('hidden');
+                } else {
+                    loanAmountError.classList.add('hidden');
+                }
+            }
+            
+            // Function to suggest optimal credit card limit
+            function suggestCreditCardLimit() {
+                const grossSalary = parseFloat(grossSalaryInput.value.replace(/,/g, '')) || 0;
+                if (grossSalary <= 0) {
+                    ccSuggestionContainer.classList.add('hidden');
+                    return;
+                }
+                
+                // Calculate available liability
+                const availableLiability = parseFloat(availableLiabilityInput.value.replace(/,/g, '')) || 0;
+                
+                // Get current DBR percentage
+                const dbrPercentage = parseFloat(dbrPercentageInput.value) || 0;
+                
+                // Calculate optimal credit card limit using the formula: availableLiability / 3 * 100
+                const optimalCCLimit = availableLiability / 3 * 100;
+                
+                if (optimalCCLimit > availableLiability && dbrPercentage < 48.99) {
+                    ccSuggestionContainer.classList.remove('hidden');
+                    ccSuggestionText.textContent = (`Based on your available liability of AED ${formatNumber(availableLiability.toFixed(2))} and current DBR of ${dbrPercentage.toFixed(2)}%, the optimal credit card limit for you would be AED ${formatNumber(optimalCCLimit.toFixed(2))}. This would keep your dbr within the 49.99% limit.`);
+                } else {
+                    ccSuggestionContainer.classList.remove('hidden');
+                    ccSuggestionText.textContent = (`Your current liabilities exceed or are close to the 49.99% DBR limit. It is not recommended to apply for any credit cards at this time.`);
+                }
+            }
+            
+            // Function to update EMI calculator
+            function updateEMICalculator() {
+                const grossSalary = parseFloat(grossSalaryInput.value.replace(/,/g, '')) || 0;
+                const multiplesOfSalary = parseFloat(multiplesOfSalaryInput.value) || 0;
+                const loanAmount = parseFloat(loanAmountInput.value) || 0;
+                const reducingRate = parseFloat(reducingRateInput.value) || 0;
+                const tenureMonths = parseInt(tenureMonthsInput.value) || 0;
+                
+                // Calculate max loan eligibility based on gross salary
+                const maxLoanEligibility = grossSalary * multiplesOfSalary;
+                maxLoanEligibilityInput.value = formatNumber(maxLoanEligibility.toFixed(2));
+                
+                // Calculate flat rate
+                const flatRate = reducingRate / 1.833;
+                flatRateInput.value = flatRate.toFixed(2);
+                
+                // Calculate EMI
+                const emi = calculateEMI(loanAmount, reducingRate, tenureMonths);
+                emiInput.value = formatNumber(emi.toFixed(2));
+                
+                // Calculate total payment
+                const totalPayment = emi * tenureMonths;
+                totalPaymentInput.value = formatNumber(totalPayment.toFixed(2));
+                
+                // Calculate total interest
+                const totalInterest = totalPayment - loanAmount;
+                totalInterestInput.value = formatNumber(totalInterest.toFixed(2));
+                
+                // Calculate processing fees
+                const processingFees = calculateProcessingFees(loanAmount);
+                processingFeesInput.value = formatNumber(processingFees.toFixed(2));
+                
+                // Update DBR calculator with new EMI amount
+                updateDBRCalculator();
+            }
+            
+            // Function to validate payment date
+            function validatePaymentDate() {
+                const disbursalDate = new Date();
+                const firstPaymentDate = new Date(firstPaymentDateInput.value);
+                const loanType = loanTypeSelect.value;
+                
+                let maxDays = 0;
+                if (loanType === 'fresh' || loanType === 'topup') {
+                    maxDays = 60;
+                } else if (loanType === 'takeover') {
+                    maxDays = 90;
+                }
+                
+                const daysDifference = Math.floor((firstPaymentDate - disbursalDate) / (1000 * 60 * 60 * 24));
+                
+                if (daysDifference > maxDays) {
+                    dateErrorMsg.textContent = `Error: First Payment Date Cannot Be More Than ${maxDays} Days After Disbursal For ${loanType} Loans.`;
+                    dateErrorMsg.classList.remove('hidden');
+                    return false;
+                } else if (firstPaymentDate <= disbursalDate) {
+                    dateErrorMsg.textContent = 'Error: First Payment Date Must Be After Disbursal Date.';
+                    dateErrorMsg.classList.remove('hidden');
+                    return false;
+                } else {
+                    dateErrorMsg.classList.add('hidden');
+                    return true;
+                }
+            }
+            
+            // Function to generate EMI payment schedule
+            function generateEMISchedule() {
+                const loanAmount = parseFloat(loanAmountInput.value) || 0;
+                const reducingRate = parseFloat(reducingRateInput.value) || 0;
+                const tenureMonths = parseInt(tenureMonthsInput.value) || 0;
+                const emi = calculateEMI(loanAmount, reducingRate, tenureMonths);
+                
+                if (loanAmount <= 0 || tenureMonths <= 0) {
+                    return [];
+                }
+                
+                const monthlyRate = reducingRate / 12 / 100;
+                let remainingPrincipal = loanAmount;
+                const schedule = [];
+                
+                for (let month = 1; month <= tenureMonths; month++) {
+                    const interestForMonth = remainingPrincipal * monthlyRate;
+                    const principalForMonth = emi - interestForMonth;
+                    remainingPrincipal -= principalForMonth;
+                    
+                    schedule.push({
+                        month,
+                        emi,
+                        principal: principalForMonth,
+                        interest: interestForMonth,
+                        balance: remainingPrincipal < 0 ? 0 : remainingPrincipal
+                    });
+                }
+                
+                return schedule;
+            }
+            
+            // Function to display EMI chart
+            function displayEMIChart() {
+                const schedule = generateEMISchedule();
+                if (schedule.length === 0) {
+                    alert('Please enter valid loan amount, rate and tenure first.');
+                    return;
+                }
+                
+                emiChartSection.classList.remove('hidden');
+                emiChartSection.scrollIntoView({ behavior: 'smooth' });
+                
+                // Create data for chart
+                const months = schedule.map(entry => entry.month);
+                const principal = schedule.map(entry => entry.principal);
+                const interest = schedule.map(entry => entry.interest);
+                
+                // Destroy previous chart if exists
+                if (emiChart) {
+                    emiChart.destroy();
+                }
+                
+                // Create chart
+                const ctx = document.getElementById('emiChart').getContext('2d');
+                emiChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: months,
+                        datasets: [
+                            {
+                                label: 'Principal',
+                                data: principal,
+                                backgroundColor: '#5D5CDE',
+                                borderColor: '#4949c9',
+                                borderWidth: 1
+                            },
+                            {
+                                label: 'Interest',
+                                data: interest,
+                                backgroundColor: '#ffba08',
+                                borderColor: '#e85d04',
+                                borderWidth: 1
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                stacked: true,
+                                title: {
+                                    display: true,
+                                    text: 'Month'
+                                }
+                            },
+                            y: {
+                                stacked: true,
+                                title: {
+                                    display: true,
+                                    text: 'Amount (AED)'
+                                }
+                            }
+                        },
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'EMI Breakdown - Principal vs. Interest',
+                                font: {
+                                    size: 16
+                                }
+                            }
+                        }
+                    }
+                });
+                
+                // Populate EMI schedule table
+                const tableBody = document.getElementById('emiScheduleBody');
+                tableBody.innerHTML = '';
+                
+                schedule.forEach(entry => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="border border-gray-300 p-2 text-center">${entry.month}</td>
+                        <td class="border border-gray-300 p-2 text-right">${formatNumber(entry.emi.toFixed(2))}</td>
+                        <td class="border border-gray-300 p-2 text-right">${formatNumber(entry.principal.toFixed(2))}</td>
+                        <td class="border border-gray-300 p-2 text-right">${formatNumber(entry.interest.toFixed(2))}</td>
+                        <td class="border border-gray-300 p-2 text-right">${formatNumber(entry.balance.toFixed(2))}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            }
+            
+            // Function to find optimal loan amount for 49.99% DBR
+            function findOptimalLoanAmount() {
+                const grossSalary = parseFloat(grossSalaryInput.value.replace(/,/g, '')) || 0;
+                if (grossSalary <= 0) {
+                    alert('Please Enter A Valid Salary Amount First.');
+                    return;
+                }
+                
+                const reducingRate = parseFloat(reducingRateInput.value) || 0;
+                const tenureMonths = parseInt(tenureMonthsInput.value) || 0;
+                const allowedLiability = grossSalary * 0.4999; // 49.99% of gross salary
+                
+                // Get existing loans installments
+                let totalExistingLoansInstallments = 0;
+                document.querySelectorAll('.loan-installment').forEach(input => {
+                    totalExistingLoansInstallments += parseFloat(input.value) || 0;
+                });
+                
+                // Calculate credit card DBR
+                let totalCCLimit = 0;
+                document.querySelectorAll('.credit-card-amount').forEach(input => {
+                    totalCCLimit += parseFloat(input.value) || 0;
+                });
+                const dbrCC = totalCCLimit * 0.03;
+                
+                // Current liabilities excluding EMI
+                const currentLiabilities = totalExistingLoansInstallments + dbrCC;
+                
+                // Available amount for EMI
+                const availableForEMI = allowedLiability - currentLiabilities;
+                
+                if (availableForEMI <= 0) {
+                    alert('Your Current Liabilities Already Exceed The 49.99% DBR Limit. Cannot Calculate Optimal Loan Amount.');
+                    return;
+                }
+                
+                // Now we need to find the loan amount that would result in this EMI
+                // Using binary search to find optimal loan amount
+                let low = 0;
+                let high = grossSalary * 100; // Setting a very high upper bound
+                let optimalLoanAmount = 0;
+                
+                while (high - low > 1) {
+                    const mid = (low + high) / 2;
+                    const emi = calculateEMI(mid, reducingRate, tenureMonths);
+                    
+                    if (emi <= availableForEMI) {
+                        low = mid;
+                        optimalLoanAmount = mid;
+                    } else {
+                        high = mid;
+                    }
+                }
+                
+                // Update loan amount input
+                loanAmountInput.value = Math.floor(optimalLoanAmount);
+                
+                // Recalculate everything
+                updateEMICalculator();
+            }
+            
+            // Function to calculate and update bank comparison
+            function updateBankComparison() {
+                // Bank 1
+                const bank1LoanAmount = parseFloat(bank1LoanAmountInput.value) || 0;
+                const bank1Tenure = parseInt(bank1TenureInput.value) || 0;
+                const bank1Rate = parseFloat(bank1RateInput.value) || 0;
+                
+                if (bank1LoanAmount > 0 && bank1Tenure > 0 && bank1Rate > 0) {
+                    const bank1EMI = calculateEMI(bank1LoanAmount, bank1Rate, bank1Tenure);
+                    bank1EMIInput.value = formatNumber(bank1EMI.toFixed(2));
+                    
+                    const bank1TotalInterest = (bank1EMI * bank1Tenure) - bank1LoanAmount;
+                    bank1TotalInterestInput.value = formatNumber(bank1TotalInterest.toFixed(2));
+                }
+                
+                // Bank 2
+                const bank2LoanAmount = parseFloat(bank2LoanAmountInput.value) || 0;
+                const bank2Tenure = parseInt(bank2TenureInput.value) || 0;
+                const bank2Rate = parseFloat(bank2RateInput.value) || 0;
+                
+                if (bank2LoanAmount > 0 && bank2Tenure > 0 && bank2Rate > 0) {
+                    const bank2EMI = calculateEMI(bank2LoanAmount, bank2Rate, bank2Tenure);
+                    bank2EMIInput.value = formatNumber(bank2EMI.toFixed(2));
+                    
+                    const bank2TotalInterest = (bank2EMI * bank2Tenure) - bank2LoanAmount;
+                    bank2TotalInterestInput.value = formatNumber(bank2TotalInterest.toFixed(2));
+                }
+                
+                // Compare banks if both have data
+                if (bank1LoanAmount > 0 && bank2LoanAmount > 0) {
+                    const bank1Name = bank1NameInput.value || 'Bank 1';
+                    const bank2Name = bank2NameInput.value || 'Bank 2';
+                    const bank1TotalInterest = parseFloat(bank1TotalInterestInput.value.replace(/,/g, '')) || 0;
+                    const bank2TotalInterest = parseFloat(bank2TotalInterestInput.value.replace(/,/g, '')) || 0;
+                    
+                    if (bank1TotalInterest < bank2TotalInterest) {
+                        comparisonResultText.innerHTML = `<span class="font-bold">${bank1Name}</span> Offers The Better Deal With <span class="font-bold">AED ${formatNumber(bank1TotalInterest.toFixed(2))}</span> In Total Interest Compared To <span class="font-bold">AED ${formatNumber(bank2TotalInterest.toFixed(2))}</span> From ${bank2Name}. <span class="font-bold">You Save AED ${formatNumber((bank2TotalInterest - bank1TotalInterest).toFixed(2))}</span> With ${bank1Name}.`;
+                    } else if (bank2TotalInterest < bank1TotalInterest) {
+                        comparisonResultText.innerHTML = `<span class="font-bold">${bank2Name}</span> Offers The Better Deal With <span class="font-bold">AED ${formatNumber(bank2TotalInterest.toFixed(2))}</span> In Total Interest Compared To <span class="font-bold">AED ${formatNumber(bank1TotalInterest.toFixed(2))}</span> From ${bank1Name}. <span class="font-bold">You Save AED ${formatNumber((bank1TotalInterest - bank2TotalInterest).toFixed(2))}</span> With ${bank2Name}.`;
+                    } else {
+                        comparisonResultText.innerHTML = `Both Banks Offer The Same Total Interest Of <span class="font-bold">AED ${formatNumber(bank1TotalInterest.toFixed(2))}</span>.`;
+                    }
+                }
+            }
+            
+            // Function to prepare WhatsApp message
+            function prepareWhatsAppMessage() {
+                const maxLoanEligibility = parseFloat(maxLoanEligibilityInput.value.replace(/,/g, '')) || 0;
+                const tenureMonths = parseInt(tenureMonthsInput.value) || 0;
+                const loanAmount = parseFloat(loanAmountInput.value) || 0;
+                const reducingRate = parseFloat(reducingRateInput.value) || 0;
+                const flatRate = parseFloat(flatRateInput.value) || 0;
+                const emi = parseFloat(emiInput.value.replace(/,/g, '')) || 0;
+                const totalPayment = parseFloat(totalPaymentInput.value.replace(/,/g, '')) || 0;
+                const totalInterest = parseFloat(totalInterestInput.value.replace(/,/g, '')) || 0;
+                const processingFees = parseFloat(processingFeesInput.value.replace(/,/g, '')) || 0;
+                const cashInHand = parseFloat(cashInHandInput.value.replace(/,/g, '')) || 0;
+                const dbrPercentage = parseFloat(dbrPercentageInput.value) || 0;
+                const specialNoteText = specialNote.value;
+                const totalOutstanding = parseFloat(totalOutstandingInput.value.replace(/,/g, '')) || 0;
+                const loanType = loanTypeSelect.value;
+                
+                let message = " *LOAN ELIGIBILITY* \n\n";
+                message += `LOAN TYPE: ${loanType === "fresh" ? "Fresh" : loanType === "topup" ? "Top-up" : "Take over"}\n`;
+                message += `MAX LOAN ELIGIBILITY: AED ${formatNumber(maxLoanEligibility.toFixed(2))}\n`;
+                message += `*LOAN AMOUNT:* AED ${formatNumber(loanAmount.toFixed(2))}\n`;
+                message += `TENURE: ${tenureMonths} months\n`;
+                message += `REDUCING RATE: ${reducingRate}%\n`;
+                message += `FLAT RATE: ${flatRate.toFixed(2)}%\n`;
+                message += `*EMI:* AED ${formatNumber(emi.toFixed(2))}\n`;
+                message += `TOTAL PAYMENT: AED ${formatNumber(totalPayment.toFixed(2))}\n`;
+                message += `TOTAL INTEREST: AED ${formatNumber(totalInterest.toFixed(2))}\n`;
+                message += `PROCESSING FEES + VAT: AED ${formatNumber(processingFees.toFixed(2))}\n`;
+		message += "INSURANCE FEES: AED 0";
+                message += `TOTAL OUTSTANDING: AED ${formatNumber(totalOutstanding.toFixed(2))}\n`;
+                message += `CASH IN HAND: AED ${formatNumber(cashInHand.toFixed(2))}\n`;
+                message += `DBR %: ${dbrPercentage.toFixed(2)}%\n`;
+                
+                if (specialNoteText) {
+                    message += `\n*SPECIAL NOTE:*\n`;
+                    specialNoteText.split('\n')
+                        .filter(line => line.trim() !== '')
+                        .forEach(line => {
+                            message += `• ${line}\n`;
+                        });
+                }
+                
+                message += "\n-----------\n";
+                message += "_The specifics of the installment plan and associated offerings may vary slightly based on the information provided in your profile._";
+                
+                return encodeURIComponent(message);
+            }
+            
+            // Function to print the page
+            function printPage() {
+                // Create a stylesheet for print mode
+                const printStyles = document.createElement('style');
+                printStyles.innerHTML = `
+                    @media print {
+                        body { 
+                            background-color: white; 
+                            margin: 0;
+                            padding: 0;
+                        }
+                        .container { 
+                            width: 100%; 
+                            max-width: 100%; 
+                            padding: 0;
+                        }
+                        
+                        /* Hide elements not needed in print */
+                        button, .non-printable { 
+                            display: none !important; 
+                        }
+                        
+                        /* Hide all sections initially */
+                        #printableArea > div {
+                            display: none !important;
+                        }
+                        
+                        /* Show only DBR Calculator, EMI Calculator and EMI Chart */
+                        #printableArea > div:nth-child(1),  /* Main heading */
+                        #printableArea > div:nth-child(3),  /* Grid with DBR and EMI calculators */
+                        #emiChartSection {
+                            display: block !important;
+                        }
+                        
+                        /* Force EMI chart to be visible */
+                        #emiChartSection.hidden {
+                            display: block !important;
+                        }
+                        
+                        /* Hide buttons within these sections */
+                        #printableArea button,
+                        #addMoreAddbackBtn,
+                        #removeAddbackBtn,
+                        #addCreditCardBtn,
+                        #removeCreditCardBtn,
+                        #findOptimalLoanBtn,
+                        #resetBtn,
+                        #addExistingLoanBtn {
+                            display: none !important;
+                        }
+                        
+                        /* Make sure form elements are visible */
+                        input, select, textarea { 
+                            border: 1px solid #ccc; 
+                            background-color: white !important;
+                            color: black !important;
+                        }
+                        
+                        /* Better spacing */
+                        h1, h2 {
+                            margin-top: 20px;
+                            color: #5D5CDE !important;
+                        }
+                        
+                        /* Force break before EMI chart */
+                        #emiChartSection {
+                            page-break-before: always;
+                        }
+                    }
+                `;
+                document.head.appendChild(printStyles);
+                
+                // Force EMI chart to be generated if not already visible
+                if (emiChartSection.classList.contains('hidden')) {
+                    displayEMIChart();
+                }
+                
+                window.print();
+                
+                // Clean up
+                setTimeout(() => {
+                    document.head.removeChild(printStyles);
+                }, 1000);
+            }
+            
+            // Function to export as PDF
+            function exportPDF() {
+                // Show loading indicator
+                const loadingDiv = document.createElement('div');
+                loadingDiv.className = 'fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50';
+                loadingDiv.innerHTML = '<div class="bg-white p-4 rounded-lg">Generating PDF...</div>';
+                document.body.appendChild(loadingDiv);
+                
+                // Only include DBR Calculator, EMI Calculator and EMI Chart in PDF
+                const contentDiv = document.createElement('div');
+                contentDiv.style.width = '100%';
+                contentDiv.style.backgroundColor = 'white';
+                contentDiv.style.padding = '20px';
+                
+                // Clone required sections
+                const h1 = document.querySelector('h1').cloneNode(true);
+                
+                const dbrCalcDiv = document.querySelector('.bg-white.dark\\:bg-gray-800.p-6.rounded-lg.shadow-md.border-l-4.border-primary:nth-child(1)').cloneNode(true);
+                // Remove buttons from the clone
+                dbrCalcDiv.querySelectorAll('button').forEach(btn => btn.remove());
+                
+                const emiCalcDiv = document.querySelector('.bg-white.dark\\:bg-gray-800.p-6.rounded-lg.shadow-md.border-l-4.border-primary:nth-child(2)').cloneNode(true);
+                // Remove buttons from the clone
+                emiCalcDiv.querySelectorAll('button').forEach(btn => btn.remove());
+                
+                // Force generate EMI chart if not already done
+                if (emiChartSection.classList.contains('hidden')) {
+                    displayEMIChart();
+                }
+                
+                const emiChartDiv = emiChartSection.cloneNode(true);
+                
+                // Add cloned content to our temporary div
+                contentDiv.appendChild(h1);
+                
+                const calculatorsDiv = document.createElement('div');
+                calculatorsDiv.className = 'grid grid-cols-2 gap-6';
+                calculatorsDiv.appendChild(dbrCalcDiv);
+                calculatorsDiv.appendChild(emiCalcDiv);
+                
+                contentDiv.appendChild(calculatorsDiv);
+                contentDiv.appendChild(emiChartDiv);
+                
+                // Temporarily add to document for html2canvas
+                contentDiv.style.position = 'absolute';
+                contentDiv.style.top = '-9999px';
+                document.body.appendChild(contentDiv);
+                
+                // Define PDF dimensions
+                const pageWidth = 210; // A4 width in mm
+                const pageHeight = 297; // A4 height in mm
+                
+                // Initialize jsPDF
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                
+                // Use html2canvas to capture each section
+                Promise.all([
+                    html2canvas(h1, {scale: 2}),
+                    html2canvas(calculatorsDiv, {scale: 2}),
+                    html2canvas(emiChartDiv, {scale: 2})
+                ]).then(canvases => {
+                    // Add h1 to first page
+                    const h1Canvas = canvases[0];
+                    const h1ImgData = h1Canvas.toDataURL('image/png');
+                    pdf.addImage(h1ImgData, 'PNG', 10, 10, 190, (h1Canvas.height * 190) / h1Canvas.width);
+                    
+                    // Add calculators
+                    const calcCanvas = canvases[1];
+                    const calcImgData = calcCanvas.toDataURL('image/png');
+                    const calcHeight = (calcCanvas.height * 190) / calcCanvas.width;
+                    
+                    // Check if it fits on first page, otherwise add new page
+                    if (20 + calcHeight > 280) {
+                        pdf.addPage();
+                        pdf.addImage(calcImgData, 'PNG', 10, 10, 190, calcHeight);
+                    } else {
+                        pdf.addImage(calcImgData, 'PNG', 10, 30, 190, calcHeight);
+                    }
+                    
+                    // Add EMI chart on a new page
+                    pdf.addPage();
+                    const chartCanvas = canvases[2];
+                    const chartImgData = chartCanvas.toDataURL('image/png');
+                    pdf.addImage(chartImgData, 'PNG', 10, 10, 190, (chartCanvas.height * 190) / chartCanvas.width);
+                    
+                    // Save PDF
+                    pdf.save('EMI_DBR_Calculator.pdf');
+                    
+                    // Clean up
+                    document.body.removeChild(contentDiv);
+                    document.body.removeChild(loadingDiv);
+                }).catch(err => {
+                    console.error('Error generating PDF:', err);
+                    document.body.removeChild(contentDiv);
+                    document.body.removeChild(loadingDiv);
+                    alert('Error generating PDF. Please try again.');
+                });
+            }
+            
+            // Add Credit Card button
+            let cardCount = 1;
+            addCreditCardBtn.addEventListener('click', function() {
+                cardCount++;
+                const creditCardDiv = document.createElement('div');
+                creditCardDiv.classList.add('grid', 'grid-cols-3', 'gap-4', 'items-center', 'credit-card-entry', 'mt-2');
+                creditCardDiv.innerHTML = `
+                    <label class="text-gray-700 dark:text-gray-300 font-medium">Credit Card ${cardCount}:</label>
+                    <div class="col-span-2 flex gap-2">
+                        <select class="border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white w-1/3">
+                            <option value="ADCB">ADCB</option>
+                            <option value="ENBD">ENBD</option>
+                            <option value="EIB">EIB</option>
+                            <option value="FAB">FAB</option>
+                            <option value="ADIB">ADIB</option>
+                            <option value="CBD">CBD</option>
+                            <option value="CITI">CITI</option>
+                            <option value="SCB">SCB</option>
+                            <option value="MASHREQ">MASHREQ</option>
+                            <option value="DIB">DIB</option>
+                            <option value="OTHER">OTHER</option>
+                        </select>
+                        <div class="flex flex-col w-2/3 space-y-1">
+                            <input type="number" placeholder="Credit Limit" class="credit-card-amount border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white">
+                            <input type="number" placeholder="Outstanding" class="credit-card-outstanding border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white">
+                        </div>
+                    </div>
+                `;
+                creditCardsContainer.appendChild(creditCardDiv);
+                
+                // Enable remove button
+                removeCreditCardBtn.disabled = false;
+                
+                // Add event listener to new credit card inputs
+                const newCreditCardInput = creditCardDiv.querySelector('.credit-card-amount');
+                newCreditCardInput.addEventListener('input', updateDBRCalculator);
+                
+                const newOutstandingInput = creditCardDiv.querySelector('.credit-card-outstanding');
+                newOutstandingInput.addEventListener('input', updateDBRCalculator);
+            });
+            
+            // Remove Credit Card button
+            removeCreditCardBtn.addEventListener('click', function() {
+                if (cardCount > 1) {
+                    const creditCardEntries = document.querySelectorAll('.credit-card-entry');
+                    creditCardEntries[creditCardEntries.length - 1].remove();
+                    cardCount--;
+                    
+                    if (cardCount === 1) {
+                        removeCreditCardBtn.disabled = true;
+                    }
+                    
+                    updateDBRCalculator();
+                }
+            });
+            
+            // Add-back Type select event listener
+            addbacksContainer.addEventListener('change', function(e) {
+                if (e.target.classList.contains('addback-type')) {
+                    createAddbackTypeFields(e.target);
+                }
+            });
+            
+            // Add More Add-back button
+            addMoreAddbackBtn.addEventListener('click', function() {
+                addbackCount++;
+                
+                const addbackDiv = document.createElement('div');
+                addbackDiv.classList.add('grid', 'grid-cols-3', 'gap-4', 'items-center', 'addback-entry', 'mt-2');
+                addbackDiv.innerHTML = `
+                    <label class="text-gray-700 dark:text-gray-300 font-medium">Add-back ${addbackCount}:</label>
+                    <div class="col-span-2">
+                        <select class="addback-type border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white w-full">
+                            <option value="">Select Add-back Type</option>
+                            <option value="hra">HRA</option>
+                            <option value="airfare">Airfare Allowance</option>
+                            <option value="overtime">Over-time</option>
+                            <option value="servicecharge">Service Charge</option>
+                            <option value="incentives">Incentives</option>
+                            <option value="telephone">Telephone Allowance</option>
+                        </select>
+                    </div>
+                `;
+                
+                addbacksContainer.appendChild(addbackDiv);
+                
+                // Enable remove button once we have more than one addback
+                removeAddbackBtn.disabled = false;
+            });
+            
+            // Remove Add-back button
+            removeAddbackBtn.addEventListener('click', function() {
+                if (addbackCount > 1) {
+                    const addbackEntries = addbacksContainer.querySelectorAll('.addback-entry');
+                    const lastAddbackEntry = addbackEntries[addbackEntries.length - 1];
+                    
+                    // Get index of the last entry to remove associated fields
+                    const index = Array.from(addbacksContainer.querySelectorAll('.addback-entry')).indexOf(lastAddbackEntry);
+                    
+                    // Remove the entry
+                    lastAddbackEntry.remove();
+                    
+                    // Remove associated fields if they exist
+                    const fieldsContainer = document.getElementById(`addback-fields-${index}`);
+                    if (fieldsContainer) {
+                        fieldsContainer.remove();
+                    }
+                    
+                    // Delete data for this addback
+                    delete addbackData[index];
+                    
+                    // Decrement counter
+                    addbackCount--;
+                    
+                    // Disable remove button if only one entry remains
+                    if (addbackCount === 1) {
+                        removeAddbackBtn.disabled = true;
+                    }
+                    
+                    // Update calculations
+                    updateGrossSalary();
+                }
+            });
+            
+            // Input event listeners
+            salaryInput.addEventListener('input', updateGrossSalary);
+            
+            // Add event listeners to initial credit card inputs
+            document.querySelector('.credit-card-amount').addEventListener('input', updateDBRCalculator);
+            document.querySelector('.credit-card-outstanding').addEventListener('input', updateDBRCalculator);
+            
+            loanTypeSelect.addEventListener('change', function() {
+                validatePaymentDate();
+                updateEMICalculator();
+            });
+            
+            multiplesOfSalaryInput.addEventListener('input', updateEMICalculator);
+            tenureMonthsInput.addEventListener('input', updateEMICalculator);
+            loanAmountInput.addEventListener('input', function() {
+                checkLoanAmountWithDBR();
+                updateEMICalculator();
+            });
+            reducingRateInput.addEventListener('input', updateEMICalculator);
+            
+            // Date validation
+            disbursalDateInput.addEventListener('change', validatePaymentDate);
+            firstPaymentDateInput.addEventListener('change', validatePaymentDate);
+            
+            // Bank comparison inputs
+            bank1LoanAmountInput.addEventListener('input', updateBankComparison);
+            bank1TenureInput.addEventListener('input', updateBankComparison);
+            bank1RateInput.addEventListener('input', updateBankComparison);
+            bank1NameInput.addEventListener('input', updateBankComparison);
+            bank2LoanAmountInput.addEventListener('input', updateBankComparison);
+            bank2TenureInput.addEventListener('input', updateBankComparison);
+            bank2RateInput.addEventListener('input', updateBankComparison);
+            bank2NameInput.addEventListener('input', updateBankComparison);
+            
+            // Find Optimal Loan button
+            findOptimalLoanBtn.addEventListener('click', findOptimalLoanAmount);
+            
+            // Show EMI Chart button
+            showEmiChartBtn.addEventListener('click', displayEMIChart);
+            
+            // Loan Comparison button
+            loanComparisonBtn.addEventListener('click', function() {
+                loanComparisonSection.classList.remove('hidden');
+                
+                // Pre-fill Bank 1 with current values
+                bank1NameInput.value = "ADCB";
+                bank1LoanAmountInput.value = loanAmountInput.value;
+                bank1TenureInput.value = tenureMonthsInput.value;
+                bank1RateInput.value = reducingRateInput.value;
+                
+                // Update comparison
+                updateBankComparison();
+                
+                // Scroll to comparison section
+                loanComparisonSection.scrollIntoView({ behavior: 'smooth' });
+            });
+            
+            // Reset button
+            resetBtn.addEventListener('click', function() {
+                salaryInput.value = '';
+                grossSalaryInput.value = '';
+                document.querySelector('.credit-card-amount').value = '';
+                document.querySelector('.credit-card-outstanding').value = '';
+                loanTypeSelect.value = 'fresh';
+                multiplesOfSalaryInput.value = '15';
+                tenureMonthsInput.value = '';
+                loanAmountInput.value = '';
+                reducingRateInput.value = '';
+                specialNote.value = '';
+                
+                // Remove extra credit cards
+                const creditCardEntries = document.querySelectorAll('.credit-card-entry');
+                for (let i = 1; i < creditCardEntries.length; i++) {
+                    creditCardEntries[i].remove();
+                }
+                cardCount = 1;
+                removeCreditCardBtn.disabled = true;
+                
+                // Remove existing loans
+                existingLoansContainer.innerHTML = '';
+                existingLoansContainer.classList.add('hidden');
+                existingLoanCount = 0;
+                
+                // Remove extra addbacks
+                const addbackEntries = document.querySelectorAll('.addback-entry');
+                for (let i = 1; i < addbackEntries.length; i++) {
+                    addbackEntries[i].remove();
+                }
+                addbackCount = 1;
+                removeAddbackBtn.disabled = true;
+                
+                // Clear addback fields and data
+                dynamicAddbackFields.innerHTML = '';
+                addbackData = {};
+                
+                // Clear first addback dropdown
+                const firstAddbackSelect = document.querySelector('.addback-type');
+                if (firstAddbackSelect) {
+                    firstAddbackSelect.value = '';
+                }
+                
+                // Reset dates
+                const today = new Date();
+                disbursalDateInput.value = today.toISOString().split('T')[0];
+                const nextMonth = new Date(today);
+                nextMonth.setMonth(nextMonth.getMonth() + 1);
+                firstPaymentDateInput.value = nextMonth.toISOString().split('T')[0];
+                
+                // Hide sections
+                emiChartSection.classList.add('hidden');
+                loanComparisonSection.classList.add('hidden');
+                
+                // Update calculations
+                updateDBRCalculator();
+                updateEMICalculator();
+            });
+            
+            // Send to WhatsApp button
+            sendWhatsAppBtn.addEventListener('click', function() {
+                const phoneNumber = whatsappNumberInput.value.replace(/\D/g, '');
+                if (!phoneNumber) {
+                    alert('Please Enter A Valid WhatsApp Number');
+                    return;
+                }
+                
+                const message = prepareWhatsAppMessage();
+                window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
+            });
+            
+            // Print button
+            printBtn.addEventListener('click', printPage);
+            
+            // Export PDF button
+            exportPdfBtn.addEventListener('click', exportPDF);
+            
+            // Initialize calculations
+            updateGrossSalary();
+            updateDBRCalculator();
+            updateEMICalculator();
+        });
+    </script>
+</body>
+</html>
