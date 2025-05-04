@@ -43,6 +43,19 @@
             border: 2px solid rgba(248, 113, 113, 0.7) !important;
             background-color: rgba(248, 113, 113, 0.1) !important;
         }
+        
+        .dbr-high {
+            color: #ef4444 !important;
+            font-weight: bold;
+            background-color: rgba(239, 68, 68, 0.1) !important;
+            border-color: #ef4444 !important;
+        }
+
+        .dark .dbr-high {
+            color: #f87171 !important;
+            background-color: rgba(248, 113, 113, 0.1) !important;
+            border-color: #f87171 !important;
+        }
     </style>
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
@@ -804,11 +817,17 @@
                     dbrCalculatorSection.classList.add('dbr-warning-flash');
                     emiCalculatorSection.classList.add('dbr-warning-flash');
                     
+                    // Permanently mark the DBR input field as high
+                    dbrPercentageInput.classList.add('dbr-high');
+                    
                     // Restore normal appearance after 3 animations (3 seconds)
                     setTimeout(() => {
                         dbrCalculatorSection.classList.remove('dbr-warning-flash');
                         emiCalculatorSection.classList.remove('dbr-warning-flash');
                     }, 3000);
+                } else {
+                    // Remove high DBR styling if DBR is now below threshold
+                    dbrPercentageInput.classList.remove('dbr-high');
                 }
                 
                 // Check if loan amount would exceed DBR limit
@@ -1652,8 +1671,7 @@
                 const firstAddbackSelect = document.querySelector('.addback-type');
                 if (firstAddbackSelect) {
                     firstAddbackSelect.value = '';
-       
-         }
+                }
                 
                 // Reset dates
                 const today = new Date();
@@ -1669,6 +1687,9 @@
                 // Remove any warning flashes
                 dbrCalculatorSection.classList.remove('dbr-warning-flash');
                 emiCalculatorSection.classList.remove('dbr-warning-flash');
+                
+                // Remove high DBR styling
+                dbrPercentageInput.classList.remove('dbr-high');
                 
                 // Update calculations
                 updateDBRCalculator();
