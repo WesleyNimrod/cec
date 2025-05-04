@@ -1191,17 +1191,17 @@
                 const loanType = loanTypeSelect.value;
                 
                 let message = " *LOAN ELIGIBILITY* \n\n";
-                message += `LOAN TYPE: ${loanType === "fresh" ? "Fresh" : loanType === "topup" ? "Top-up" : "Take over"}\n`;
+                message += `LOAN TYPE: ${loanType === "fresh" ? "FRESH" : loanType === "topup" ? "TOP-UP" : "BUYOUT"}\n`;
                 message += `MAX LOAN ELIGIBILITY: AED ${formatNumber(maxLoanEligibility.toFixed(2))}\n`;
-                message += `*LOAN AMOUNT:* AED ${formatNumber(loanAmount.toFixed(2))}\n`;
+                message += `LOAN AMOUNT: AED ${formatNumber(loanAmount.toFixed(2))}\n`;
                 message += `TENURE: ${tenureMonths} months\n`;
                 message += `REDUCING RATE: ${reducingRate}%\n`;
                 message += `FLAT RATE: ${flatRate.toFixed(2)}%\n`;
-                message += `*EMI:* AED ${formatNumber(emi.toFixed(2))}\n`;
+                message += `*INSTALLMENT:* AED ${formatNumber(emi.toFixed(2))}\n`;
                 message += `TOTAL PAYMENT: AED ${formatNumber(totalPayment.toFixed(2))}\n`;
                 message += `TOTAL INTEREST: AED ${formatNumber(totalInterest.toFixed(2))}\n`;
                 message += `PROCESSING FEES + VAT: AED ${formatNumber(processingFees.toFixed(2))}\n`;
-		message += "INSURANCE FEES: AED 0";
+        		message += "PROCESSING FEES: 0 FEES \n";
                 message += `TOTAL OUTSTANDING: AED ${formatNumber(totalOutstanding.toFixed(2))}\n`;
                 message += `CASH IN HAND: AED ${formatNumber(cashInHand.toFixed(2))}\n`;
                 message += `DBR %: ${dbrPercentage.toFixed(2)}%\n`;
@@ -1595,9 +1595,9 @@
                 document.querySelector('.credit-card-outstanding').value = '';
                 loanTypeSelect.value = 'fresh';
                 multiplesOfSalaryInput.value = '15';
-                tenureMonthsInput.value = '';
+                tenureMonthsInput.value = '48';
                 loanAmountInput.value = '';
-                reducingRateInput.value = '';
+                reducingRateInput.value = '10';
                 specialNote.value = '';
                 
                 // Remove extra credit cards
