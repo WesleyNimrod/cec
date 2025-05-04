@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Loan Rate Calculator</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Select2 for searchable dropdown -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#0F766E', // Dark teal green
+                        secondary: '#1E3A8A', // Dark blue
+                        accent: '#065F46', // Medium green
+                        light: '#F5F5F5',
+                        warning: '#FFC107',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom styling for Select2 */
+        .select2-container {
+            width: 100% !important;
+        }
+        .select2-container--default .select2-selection--single {
+            height: 42px;
+            border-radius: 0.375rem;
+            padding: 0.5rem;
+            border-color: #D1D5DB;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 42px;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: 24px;
+        }
+        
+        /* Dark mode support */
+        .dark .select2-container--default .select2-selection--single {
+            background-color: #374151;
+            border-color: #4B5563;
+            color: white;
+        }
+        .dark .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: white;
+        }
+        .dark .select2-dropdown {
+            background-color: #374151;
+            color: white;
+            border-color: #4B5563;
+        }
+        .dark .select2-search__field {
+            background-color: #1F2937;
+            color: white;
+        }
+        .dark .select2-results__option {
+            color: white;
+        }
+        .dark .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background-color: #4B5563;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 transition-colors duration-200 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-primary dark:text-white">Personal Loan Pricing Calculator</h1>
+            <p class="text-gray-600 dark:text-gray-300 mt-2">Calculate loan interest rates based on customer profile</p>
+        </header>
+
+        <!-- Main Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+            <!-- Banner/Header -->
+            <div class="bg-gradient-to-r from-green-700 to-blue-900 p-4 flex justify-between items-center">
+                <h2 id="pricingTitle" class="text-xl font-bold text-white">PIL Pricing -- Expats</h2>
+                <a href="index.html" class="bg-white text-blue-900 hover:bg-gray-200 font-medium py-1 px-4 rounded-md transition-all duration-200">
+                    Back to Home
+                </a>
+            </div>
+
+            <!-- Form Section -->
+            <div class="p-6">
+                <form id="rateCalculatorForm" class="space-y-6">
+                    <!-- Customer Name -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                        <label for="customerName" class="text-gray-700 dark:text-gray-300 font-medium">Customer Name:</label>
+                        <input type="text" id="customerName" name="customerName" placeholder="Enter customer name" 
+                            class="md:col-span-2 border border-gray-300 dark:border-gray-600 rounded-md p-2 
+                            focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white">
+                    </div>
+
+                    <!-- Nationality (Moved up) -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                        <label for="nationality" class="text-gray-700 dark:text-gray-300 font-medium">Nationality:</label>
+                        <div class="md:col-span-2">
+                            <select id="nationality" name="nationality" class="w-full">
+                                <!-- Will be populated with countries -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Non-UAE Fields -->
+                    <div id="nonUaeFields">
+                        <!-- Risk Band -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                            <label for="riskBand" class="text-gray-700 dark:text-gray-300 font-medium">Risk Band:</label>
+                            <select id="riskBand" name="riskBand" 
+                                class="md:col-span-2 border border-gray-300 dark:border-gray-600 rounded-md p-2 
+                                focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white">
+                                <option value="" disabled selected>Select Risk Band</option>
+                                <option value="NH">No Hit (NH)</option>
+                                <option value="VLR">Very Low Risk (VLR)</option>
+                                <option value="LR">Low Risk (LR)</option>
+                                <option value="MR">Medium Risk (MR)</option>
+                                <option value="HR">High Risk (HR)</option>
+                                <option value="VHR">Very High Risk (VHR)</option>
+                            </select>
+                        </div>
+
+                        <!-- Category -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center mt-6">
+                            <label for="category" class="text-gray-700 dark:text-gray-300 font-medium">Category:</label>
+                            <select id="category" name="category" 
+                                class="md:col-span-2 border border-gray-300 dark:border-gray-600 rounded-md p-2 
+                                focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white">
+                                <option value="" disabled selected>Select Category</option>
+                                <option value="CAT A">CAT A</option>
+                                <option value="CAT B">CAT B</option>
+                                <option value="CAT C">CAT C</option>
+                                <option value="CAT D">CAT D</option>
+                                <option value="CAT E">CAT E</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Salary (Common field) -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                        <label for="salary" class="text-gray-700 dark:text-gray-300 font-medium">Salary (AED):</label>
+                        <input type="number" id="salary" name="salary" placeholder="Enter monthly salary" min="5000" 
+                            class="md:col-span-2 border border-gray-300 dark:border-gray-600 rounded-md p-2 
+                            focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white">
+                    </div>
+
+                    <!-- Salary Range (Hidden) -->
+                    <div class="hidden">
+                        <input type="text" id="salaryRange" name="salaryRange" readonly>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Results Section -->
+            <div id="resultsSection" class="p-6 border-t-2 border-primary">
+                <h3 class="text-xl font-bold text-primary dark:text-white mb-4">Calculated Interest Rate</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Customer Information Summary -->
+                    <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-md shadow">
+                        <h4 class="font-semibold text-gray-800 dark:text-gray-200 mb-3">Customer Profile</h4>
+                        <ul class="space-y-2">
+                            <li class="flex justify-between">
+                                <span class="text-gray-600 dark:text-gray-400">Customer:</span>
+                                <span id="resultName" class="font-medium text-gray-800 dark:text-white"></span>
+                            </li>
+                            <li id="resultRiskBandRow" class="flex justify-between">
+                                <span class="text-gray-600 dark:text-gray-400">Risk Band:</span>
+                                <span id="resultRiskBand" class="font-medium text-gray-800 dark:text-white"></span>
+                            </li>
+                            <li class="flex justify-between">
+                                <span class="text-gray-600 dark:text-gray-400">Salary:</span>
+                                <span id="resultSalary" class="font-medium text-gray-800 dark:text-white"></span>
+                            </li>
+                            <li id="resultCategoryRow" class="flex justify-between">
+                                <span class="text-gray-600 dark:text-gray-400">Category:</span>
+                                <span id="resultCategory" class="font-medium text-gray-800 dark:text-white"></span>
+                            </li>
+                            <li class="flex justify-between">
+                                <span class="text-gray-600 dark:text-gray-400">Nationality:</span>
+                                <span id="resultNationality" class="font-medium text-gray-800 dark:text-white"></span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Rate Information -->
+                    <div class="bg-primary bg-opacity-10 dark:bg-gray-700 p-4 rounded-md shadow border-l-4 border-primary">
+                        <h4 class="font-semibold text-gray-800 dark:text-gray-200 mb-3">Interest Rate Details</h4>
+                        <div class="space-y-3">
+                            <div id="baseRateContainer" class="flex justify-between">
+                                <span class="text-gray-600 dark:text-gray-400">Base Rate:</span>
+                                <span id="baseRate" class="font-medium text-gray-800 dark:text-white"></span>
+                            </div>
+                            <div id="categoryModifierContainer" class="flex justify-between">
+                                <span class="text-gray-600 dark:text-gray-400">Category Modifier:</span>
+                                <span id="categoryModifier" class="font-medium text-gray-800 dark:text-white"></span>
+                            </div>
+                            <div class="flex justify-between pt-2 border-t border-gray-300 dark:border-gray-600">
+                                <span class="text-primary dark:text-white font-bold">Final Rate:</span>
+                                <span id="finalRate" class="font-bold text-primary dark:text-white text-xl"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rate Grid Information (Collapsible) -->
+        <div class="mt-8">
+            <button id="toggleRateGrid" class="flex items-center justify-between w-full bg-secondary text-white p-3 rounded-t-lg">
+                <span class="font-semibold">View Rate Grid</span>
+                <svg id="gridToggleIcon" class="w-5 h-5 transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+            </button>
+            
+            <div id="rateGridContainer" class="bg-white dark:bg-gray-800 p-4 rounded-b-lg shadow hidden">
+                <!-- Non-UAE Rate Grid -->
+                <div id="nonUaeRateGrid">
+                    <h3 class="text-center font-bold text-lg text-primary dark:text-white mb-3">CAT A&B</h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full border-collapse border border-gray-300 dark:border-gray-700">
+                            <thead>
+                                <tr class="bg-secondary text-white text-center">
+                                    <th class="border border-gray-300 dark:border-gray-700 p-2">Salary Range</th>
+                                    <th class="border border-gray-300 dark:border-gray-700 p-2">VHR</th>
+                                    <th class="border border-gray-300 dark:border-gray-700 p-2">HR</th>
+                                    <th class="border border-gray-300 dark:border-gray-700 p-2">MR</th>
+                                    <th class="border border-gray-300 dark:border-gray-700 p-2">LR</th>
+                                    <th class="border border-gray-300 dark:border-gray-700 p-2">VLR</th>
+                                    <th class="border border-gray-300 dark:border-gray-700 p-2">NH</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="text-center bg-gray-50 dark:bg-gray-700">
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2 font-medium">5K-8K</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">12.00%</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">11.00%</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">10.50%</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">10.00%</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">9.50%</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">10.50%</td>
+                                </tr>
+                                <tr class="text-center">
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2 font-medium">8K-12K</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">11.50%</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">10.50%</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">10.00%</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">9.50%</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">9.00%</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">10.00%</td>
+                                </tr>
+                                <tr class="text-center bg-gray-50 dark:bg-gray-700">
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2 font-medium">12K-20K</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">11.00%</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">10.00%</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">8.50%</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">8.00%</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">7.50%</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">8.50%</td>
+                                </tr>
+                                <tr class="text-center">
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2 font-medium">20K-30K</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">9.00%</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">8.00%</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">7.50%</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">7.25%</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">7.00%</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">7.50%</td>
+                                </tr>
+                                <tr class="text-center bg-gray-50 dark:bg-gray-700">
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2 font-medium">30K-50K</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">9.00%</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">8.00%</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">7.00%</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">6.50%</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">6.25%</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">7.00%</td>
+                                </tr>
+                                <tr class="text-center">
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2 font-medium">50K & Above</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">9.00%</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">8.00%</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">6.50%</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">6.25%</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">5.99%</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">6.50%</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Category Adjustments -->
+                    <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-gray-100 dark:bg-gray-700 p-3 rounded-md">
+                            <h4 class="font-bold text-primary dark:text-white">CAT C</h4>
+                            <p class="dark:text-gray-300">Pricing for CAT C is 50 bps higher than CAT A&B</p>
+                        </div>
+                        <div class="bg-gray-100 dark:bg-gray-700 p-3 rounded-md">
+                            <h4 class="font-bold text-primary dark:text-white">CAT D/E/Others</h4>
+                            <p class="dark:text-gray-300">Pricing is 200 bps higher than CAT A&B</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- UAE Rate Grid -->
+                <div id="uaeRateGrid" class="hidden">
+                    <h3 class="text-center font-bold text-lg text-primary dark:text-white mb-3">UAE Nationals</h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full border-collapse border border-gray-300 dark:border-gray-700">
+                            <thead>
+                                <tr class="bg-secondary text-white text-center">
+                                    <th class="border border-gray-300 dark:border-gray-700 p-2">Salary</th>
+                                    <th class="border border-gray-300 dark:border-gray-700 p-2">STD ROI</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="text-center bg-gray-50 dark:bg-gray-700">
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2 font-medium">&lt;20K</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">6.49%</td>
+                                </tr>
+                                <tr class="text-center">
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2 font-medium">20K-40K</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">5.99%</td>
+                                </tr>
+                                <tr class="text-center bg-gray-50 dark:bg-gray-700">
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2 font-medium">40K-70K</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">5.74%</td>
+                                </tr>
+                                <tr class="text-center">
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2 font-medium">&gt;=70K/Excellency</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">5.49%</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="mt-8 text-center text-sm text-gray-500 dark:text-gray-400">
+            <p>Personal Loan Rate Calculator © 2025</p>
+            <p class="mt-1">All rates shown are for illustration purposes only. Actual rates may vary.</p>
+        </footer>
+    </div>
+
+    <script>
+        // Define the rate grid based on the provided image
+        const rateGrid = {
+            "5K-8K": {"VHR": 12.00, "HR": 11.00, "MR": 10.50, "LR": 10.00, "VLR": 9.50, "NH": 10.50},
+            "8K-12K": {"VHR": 11.50, "HR": 10.50, "MR": 10.00, "LR": 9.50, "VLR": 9.00, "NH": 10.00},
+            "12K-20K": {"VHR": 11.00, "HR": 10.00, "MR": 8.50, "LR": 8.00, "VLR": 7.50, "NH": 8.50},
+            "20K-30K": {"VHR": 9.00, "HR": 8.00, "MR": 7.50, "LR": 7.25, "VLR": 7.00, "NH": 7.50},
+            "30K-50K": {"VHR": 9.00, "HR": 8.00, "MR": 7.00, "LR": 6.50, "VLR": 6.25, "NH": 7.00},
+            "50K & Above": {"VHR": 9.00, "HR": 8.00, "MR": 6.50, "LR": 6.25, "VLR": 5.99, "NH": 6.50}
+        };
+
+        // Define UAE Nationals rate grid
+        const uaeRateGrid = {
+            "<20K": 6.49,
+            "20K-40K": 5.99,
+            "40K-70K": 5.74,
+            ">=70K": 5.49
+        };
+
+        // Countries list for the nationality dropdown
+        const countries = [
+            "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", "Armenia", "Australia", "Austria", 
+            "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", 
+            "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi", "Cabo Verde", "Cambodia", 
+            "Cameroon", "Canada", "Central African Republic", "Chad", "Chile", "China", "Colombia", "Comoros", "Congo", "Costa Rica", 
+            "Croatia", "Cuba", "Cyprus", "Czech Republic", "Denmark", "Djibouti", "Dominica", "Dominican Republic", "East Timor", "Ecuador", 
+            "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini", "Ethiopia", "Fiji", "Finland", "France", 
+            "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", 
+            "Guyana", "Haiti", "Honduras", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", 
+            "Israel", "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Korea, North", "Korea, South", 
+            "Kosovo", "Kuwait", "Kyrgyzstan", "Laos", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", 
+            "Lithuania", "Luxembourg", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Mauritania", 
+            "Mauritius", "Mexico", "Micronesia", "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar", 
+            "Namibia", "Nauru", "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Macedonia", "Norway", 
+            "Oman", "Pakistan", "Palau", "Palestine", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Poland", 
+            "Portugal", "Qatar", "Romania", "Russia", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino", 
+            "Sao Tome and Principe", "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", "Slovenia", "Solomon Islands", 
+            "Somalia", "South Africa", "South Sudan", "Spain", "Sri Lanka", "Sudan", "Suriname", "Sweden", "Switzerland", "Syria", 
+            "Taiwan", "Tajikistan", "Tanzania", "Thailand", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", 
+            "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "United States", "Uruguay", "Uzbekistan", "Vanuatu", "Vatican City", 
+            "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe"
+        ];
+
+        // Initialize the Select2 dropdown for nationality when the document is ready
+        $(document).ready(function() {
+            // Populate the nationality dropdown
+            let nationalityDropdown = $('#nationality');
+            countries.forEach(country => {
+                nationalityDropdown.append(new Option(country, country));
+            });
+            
+            // Initialize Select2
+            nationalityDropdown.select2({
+                placeholder: "Select or search nationality",
+                allowClear: true
+            });
+
+            // Set up dark mode detection for Select2
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.classList.add('dark');
+            }
+            
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+                if (event.matches) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            });
+            
+            // Add event listeners for automatic calculation
+            $('#customerName, #nationality, #riskBand, #category, #salary').on('change input', function() {
+                calculateRate();
+            });
+            
+            // Handle nationality change for showing/hiding fields
+            $('#nationality').on('change', function() {
+                const nationality = $(this).val();
+                if (nationality === "United Arab Emirates") {
+                    // UAE Nationals - show special fields
+                    $('#nonUaeFields').hide();
+                    $('#pricingTitle').text('PIL Pricing -- UAE Nationals');
+                    $('#nonUaeRateGrid').hide();
+                    $('#uaeRateGrid').show();
+                    $('#resultRiskBandRow, #resultCategoryRow').hide();
+                } else {
+                    // Non-UAE - show standard fields
+                    $('#nonUaeFields').show();
+                    $('#pricingTitle').text('PIL Pricing -- Expats');
+                    $('#nonUaeRateGrid').show();
+                    $('#uaeRateGrid').hide();
+                    $('#resultRiskBandRow, #resultCategoryRow').show();
+                }
+                calculateRate();
+            });
+            
+            // Toggle rate grid visibility
+            $('#toggleRateGrid').on('click', function() {
+                $('#rateGridContainer').toggleClass('hidden');
+                $('#gridToggleIcon').toggleClass('rotate-180');
+            });
+        });
+
+        // Function to determine the salary range based on salary input
+        function updateSalaryRange() {
+            const salary = parseFloat($('#salary').val());
+            let range = '';
+            const nationality = $('#nationality').val();
+            
+            if (nationality === "United Arab Emirates") {
+                // UAE Nationals salary ranges
+                if (!salary || salary < 5000) {
+                    range = 'Minimum salary required is 5,000 AED';
+                } else if (salary < 20000) {
+                    range = '<20K';
+                } else if (salary >= 20000 && salary < 40000) {
+                    range = '20K-40K';
+                } else if (salary >= 40000 && salary < 70000) {
+                    range = '40K-70K';
+                } else if (salary >= 70000) {
+                    range = '>=70K';
+                }
+            } else {
+                // Non-UAE salary ranges
+                if (!salary || salary < 5000) {
+                    range = 'Minimum salary required is 5,000 AED';
+                } else if (salary >= 5000 && salary < 8000) {
+                    range = '5K-8K';
+                } else if (salary >= 8000 && salary < 12000) {
+                    range = '8K-12K';
+                } else if (salary >= 12000 && salary < 20000) {
+                    range = '12K-20K';
+                } else if (salary >= 20000 && salary < 30000) {
+                    range = '20K-30K';
+                } else if (salary >= 30000 && salary < 50000) {
+                    range = '30K-50K';
+                } else if (salary >= 50000) {
+                    range = '50K & Above';
+                }
+            }
+            
+            $('#salaryRange').val(range);
+            return range;
+        }
+
+        // Function to calculate the interest rate
+        function calculateRate() {
+            // Get form values
+            const customerName = $('#customerName').val();
+            const nationality = $('#nationality').val();
+            const salary = parseFloat($('#salary').val());
+            
+            // Skip calculation if essential data is missing
+            if (!customerName || !nationality || !salary || isNaN(salary)) {
+                return;
+            }
+            
+            // Update and get salary range
+            const salaryRange = updateSalaryRange();
+            
+            if (salaryRange.includes('Minimum')) {
+                return;
+            }
+            
+            let baseRate = 0;
+            let categoryModifier = 0;
+            let finalRate = 0;
+            
+            if (nationality === "United Arab Emirates") {
+                // UAE Nationals calculation
+                baseRate = uaeRateGrid[salaryRange];
+                finalRate = baseRate;
+                
+                // Hide category modifier for UAE nationals
+                $('#categoryModifierContainer').hide();
+                $('#baseRateContainer').hide();
+                
+                // Update results section
+                $('#resultName').text(customerName);
+                $('#resultSalary').text(`${salary.toLocaleString()} AED`);
+                $('#resultNationality').text(nationality);
+                $('#finalRate').text(`${finalRate.toFixed(2)}%`);
+            } else {
+                // Non-UAE calculation
+                const riskBand = $('#riskBand').val();
+                const category = $('#category').val();
+                
+                // Skip calculation if essential data is missing
+                if (!riskBand || !category) {
+                    return;
+                }
+                
+                // Get base rate from the grid
+                baseRate = rateGrid[salaryRange][riskBand];
+                
+                // Apply category adjustments
+                if (category === 'CAT C') {
+                    categoryModifier = 0.50;
+                } else if (category === 'CAT D' || category === 'CAT E') {
+                    categoryModifier = 2.00;
+                }
+                
+                finalRate = baseRate + categoryModifier;
+                
+                // Show appropriate UI elements for non-UAE
+                $('#categoryModifierContainer').toggle(categoryModifier > 0);
+                $('#baseRateContainer').show();
+                
+                // Update results section
+                $('#resultName').text(customerName);
+                $('#resultRiskBand').text(riskBand);
+                $('#resultSalary').text(`${salary.toLocaleString()} AED`);
+                $('#resultCategory').text(category);
+                $('#resultNationality').text(nationality);
+                
+                $('#baseRate').text(`${baseRate.toFixed(2)}%`);
+                
+                if (categoryModifier > 0) {
+                    $('#categoryModifier').text(`+${categoryModifier.toFixed(2)}%`);
+                }
+                
+                $('#finalRate').text(`${finalRate.toFixed(2)}%`);
+            }
+            
+            // Show results section
+            $('#resultsSection').show();
+        }
+    </script>
+</body>
+</html>
