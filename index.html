@@ -72,13 +72,14 @@
             </div>
             
             <div class="flex flex-wrap justify-center gap-4">
-    <button id="showEmiChartBtn" class="bg-yellow-400 text-white p-3 rounded-md hover:bg-opacity-80 text-base">EMI Payment Chart</button>
-    <button id="sendWhatsAppBtn" class="bg-green-500 text-white p-3 rounded-md hover:bg-opacity-80 text-base">Send To WhatsApp</button>
+	<a href="https://script.google.com/macros/s/AKfycbyt6zvvO5POe2jMnyaR2bJOPu09L2f2Rr3Aeh72_APIR1C-6JVzSDOZvGfi4ZOZbQL0/exec" class="bg-red-500 text-white p-3 	rounded-md hover:bg-opacity-80 text-base">Tracker</a>
+    <a href="advcalc.html" class="bg-orange-500 text-white p-3 rounded-md hover:bg-opacity-80 text-base">Advanced Calculator</a>
+    <button id="showEmiChartBtn" class="bg-yellow-400 text-white p-3 rounded-md hover:bg-opacity-80 text-base">EMI Chart</button>
     <button id="printBtn" class="bg-blue-500 text-white p-3 rounded-md hover:bg-opacity-80 text-base">Print Page</button>
     <button id="exportPdfBtn" class="bg-blue-800 text-white p-3 rounded-md hover:bg-opacity-80 text-base">Export PDF</button>
     <button id="loanComparisonBtn" class="bg-purple-800 text-white p-3 rounded-md hover:bg-opacity-80 text-base">Compare Loans</button>
-    <a href="https://script.google.com/macros/s/AKfycbyt6zvvO5POe2jMnyaR2bJOPu09L2f2Rr3Aeh72_APIR1C-6JVzSDOZvGfi4ZOZbQL0/exec" class="bg-red-500 text-white p-3 rounded-md hover:bg-opacity-80 text-base">Follow-Up Tracker</a>
-    <a href="rategrid.html" class="bg-teal-600 text-white p-3 rounded-md hover:bg-opacity-80 text-base">Rate Grid</a>
+    <button id="sendWhatsAppBtn" class="bg-green-600 text-white p-3 rounded-md hover:bg-opacity-80 text-base">Share WhatsApp</button>
+    <a href="rategrid.html" class="bg-teal-700 text-white p-3 rounded-md hover:bg-opacity-80 text-base">Rate Grid</a>
 </div>
         </div>
         
@@ -219,9 +220,11 @@
                     <div class="grid grid-cols-3 gap-4 items-center">
                         <label class="text-gray-700 dark:text-gray-300 font-medium">Loan Type:</label>
                         <select id="loanType" class="col-span-2 border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white">
-                            <option value="fresh">Fresh (0-60 days)</option>
-                            <option value="topup">Top-up (0-60 days)</option>
-                            <option value="takeover">Take over (0-90 days)</option>
+                            <option value="fresh-0-30">Fresh (0-30 days)</option>
+                            <option value="fresh-30-60">Fresh (30-60 days)</option>
+                            <option value="topup-0-30">Top-up (0-30 days)</option>
+                            <option value="topup-30-60">Top-up (30-60 days)</option>
+                            <option value="takeover-60-90">Take over (60-90 days)</option>
                         </select>
                     </div>
                     
@@ -234,6 +237,11 @@
                         <label class="text-gray-700 dark:text-gray-300 font-medium">First Payment Date:</label>
                         <input type="date" id="firstPaymentDate" class="col-span-2 border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white">
                         <p id="dateError" class="col-span-3 text-red-600 dark:text-red-400 text-sm hidden">Error: Invalid Payment Date</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-4 items-center">
+                        <label class="text-gray-700 dark:text-gray-300 font-medium">Days Between:</label>
+                        <input type="text" id="daysBetween" class="col-span-2 border rounded-md p-2 bg-lightgray dark:bg-gray-700 dark:text-white" readonly>
                     </div>
                     
                     <div class="grid grid-cols-3 gap-4 items-center">
@@ -468,6 +476,7 @@
             const resetBtn = document.getElementById('resetBtn');
             const disbursalDateInput = document.getElementById('disbursalDate');
             const firstPaymentDateInput = document.getElementById('firstPaymentDate');
+            const daysBetweenInput = document.getElementById('daysBetween');
             const dateErrorMsg = document.getElementById('dateError');
             const showEmiChartBtn = document.getElementById('showEmiChartBtn');
             const emiChartSection = document.getElementById('emiChartSection');
@@ -515,6 +524,9 @@
             const nextMonth = new Date(today);
             nextMonth.setMonth(nextMonth.getMonth() + 1);
             firstPaymentDateInput.value = nextMonth.toISOString().split('T')[0];
+            
+            // Update days between dates
+            updateDaysBetween();
             
             // Add-back related variables
             let addbackCount = 1;
@@ -725,11 +737,53 @@
                 updateEMICalculator();
             }
 
-            // Function to calculate EMI
-            function calculateEMI(principal, rate, tenure) {
+            // Function to calculate standard EMI
+            function calculateStandardEMI(principal, rate, tenure) {
                 const monthlyRate = rate / 12 / 100;
                 const emi = principal * monthlyRate * Math.pow(1 + monthlyRate, tenure) / (Math.pow(1 + monthlyRate, tenure) - 1);
                 return isNaN(emi) || !isFinite(emi) ? 0 : emi;
+            }
+            
+            // Function to get grace period based on loan type
+            function getGracePeriodFromLoanType(loanType) {
+                switch(loanType) {
+                    case 'fresh-0-30':
+                        return 0;
+                    case 'fresh-30-60':
+                    case 'topup-30-60':
+                        return 1;
+                    case 'topup-0-30':
+                        return 0;
+                    case 'takeover-60-90':
+                        return 2;
+                    default:
+                        return 0;
+                }
+            }
+            
+            // Function to calculate EMI with grace period
+            function calculateEMIWithGracePeriod(principal, rate, tenure, loanType) {
+                if (!principal || !rate || !tenure || !loanType) return 0;
+                
+                const monthlyRate = rate / 12 / 100;
+                const gracePeriodMonths = getGracePeriodFromLoanType(loanType);
+                
+                if (gracePeriodMonths === 0) {
+                    // Standard EMI calculation (0-30 days)
+                    return calculateStandardEMI(principal, rate, tenure);
+                } else if (gracePeriodMonths === 1) {
+                    // 30-60 days (add 1 month of interest to principal)
+                    const interest1Month = principal * monthlyRate;
+                    const newPrincipal = principal + interest1Month;
+                    return calculateStandardEMI(newPrincipal, rate, tenure);
+                } else if (gracePeriodMonths === 2) {
+                    // 60-90 days (add 2 months of interest to principal)
+                    const interest2Months = principal * monthlyRate * 2;
+                    const newPrincipal = principal + interest2Months;
+                    return calculateStandardEMI(newPrincipal, rate, tenure);
+                }
+                
+                return 0;
             }
             
             // Function to calculate processing fees
@@ -743,6 +797,43 @@
                     return 525;
                 } else {
                     return processingFeePercent;
+                }
+            }
+            
+            // Function to calculate days between two dates
+            function calculateDaysBetween(startDate, endDate) {
+                const start = new Date(startDate);
+                const end = new Date(endDate);
+                const diffTime = Math.abs(end - start);
+                return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            }
+            
+            // Function to update days between
+            function updateDaysBetween() {
+                const disbursalDate = disbursalDateInput.value;
+                const firstPaymentDate = firstPaymentDateInput.value;
+                
+                if (disbursalDate && firstPaymentDate) {
+                    const days = calculateDaysBetween(disbursalDate, firstPaymentDate);
+                    daysBetweenInput.value = days;
+                } else {
+                    daysBetweenInput.value = '';
+                }
+            }
+            
+            // Function to get day range based on loan type
+            function getDayRangeFromLoanType(loanType) {
+                switch(loanType) {
+                    case 'fresh-0-30':
+                    case 'topup-0-30':
+                        return [0, 30];
+                    case 'fresh-30-60':
+                    case 'topup-30-60':
+                        return [31, 60];
+                    case 'takeover-60-90':
+                        return [61, 90];
+                    default:
+                        return [0, 90];
                 }
             }
             
@@ -785,8 +876,8 @@
                 const totalOutstanding = totalCCOutstanding + totalExistingLoansOutstanding;
                 totalOutstandingInput.value = formatNumber(totalOutstanding.toFixed(2));
                 
-                // Calculate DBR for credit cards (3% of total limit)
-                const dbrCC = totalCCLimit * 0.03;
+                // Calculate DBR for credit cards (5% of total limit) - changed from 3% to 5%
+                const dbrCC = totalCCLimit * 0.05;
                 dbrCCInput.value = formatNumber(dbrCC.toFixed(2));
                 
                 // Calculate allowed liability (50% of gross salary)
@@ -855,6 +946,7 @@
                 const loanAmount = parseFloat(loanAmountInput.value) || 0;
                 const reducingRate = parseFloat(reducingRateInput.value) || 0;
                 const tenureMonths = parseInt(tenureMonthsInput.value) || 0;
+                const loanType = loanTypeSelect.value;
                 
                 if (grossSalary <= 0 || loanAmount <= 0) {
                     loanAmountError.classList.add('hidden');
@@ -862,7 +954,7 @@
                 }
                 
                 // Calculate EMI for the loan amount
-                const emi = calculateEMI(loanAmount, reducingRate, tenureMonths);
+                const emi = calculateEMIWithGracePeriod(loanAmount, reducingRate, tenureMonths, loanType);
                 
                 // Calculate total liabilities without EMI
                 
@@ -878,7 +970,7 @@
                     totalCCLimit += parseFloat(input.value) || 0;
                 });
                 
-                const dbrCC = totalCCLimit * 0.03;
+                const dbrCC = totalCCLimit * 0.05; // Changed from 0.03 to 0.05
                 const currentLiabilities = totalExistingLoansInstallments + dbrCC;
                 
                 // Calculate total liabilities with EMI
@@ -909,8 +1001,9 @@
                 // Get current DBR percentage
                 const dbrPercentage = parseFloat(dbrPercentageInput.value) || 0;
                 
-                // Calculate optimal credit card limit using the formula: availableLiability / 3 * 100
-                const optimalCCLimit = availableLiability / 3 * 100;
+                // Calculate optimal credit card limit using the formula: availableLiability / 5 * 100
+                // Changed from /3 to /5 because DBR CC calculation changed from 3% to 5%
+                const optimalCCLimit = availableLiability / 5 * 100;
                 
                 if (optimalCCLimit > availableLiability && dbrPercentage < 48.99) {
                     ccSuggestionContainer.classList.remove('hidden');
@@ -928,6 +1021,7 @@
                 const loanAmount = parseFloat(loanAmountInput.value) || 0;
                 const reducingRate = parseFloat(reducingRateInput.value) || 0;
                 const tenureMonths = parseInt(tenureMonthsInput.value) || 0;
+                const loanType = loanTypeSelect.value;
                 
                 // Calculate max loan eligibility based on gross salary
                 const maxLoanEligibility = grossSalary * multiplesOfSalary;
@@ -937,43 +1031,51 @@
                 const flatRate = reducingRate / 1.833;
                 flatRateInput.value = flatRate.toFixed(2);
                 
-                // Calculate EMI
-                const emi = calculateEMI(loanAmount, reducingRate, tenureMonths);
-                emiInput.value = formatNumber(emi.toFixed(2));
-                
-                // Calculate total payment
-                const totalPayment = emi * tenureMonths;
-                totalPaymentInput.value = formatNumber(totalPayment.toFixed(2));
-                
-                // Calculate total interest
-                const totalInterest = totalPayment - loanAmount;
-                totalInterestInput.value = formatNumber(totalInterest.toFixed(2));
-                
-                // Calculate processing fees
-                const processingFees = calculateProcessingFees(loanAmount);
-                processingFeesInput.value = formatNumber(processingFees.toFixed(2));
-                
-                // Update DBR calculator with new EMI amount
-                updateDBRCalculator();
+                if (loanAmount > 0 && reducingRate > 0 && tenureMonths > 0) {
+                    // Calculate EMI with grace period 
+                    const emi = calculateEMIWithGracePeriod(loanAmount, reducingRate, tenureMonths, loanType);
+                    emiInput.value = formatNumber(emi.toFixed(2));
+                    
+                    // Calculate total payment
+                    const totalPayment = emi * tenureMonths;
+                    totalPaymentInput.value = formatNumber(totalPayment.toFixed(2));
+                    
+                    // Calculate total interest
+                    const totalInterest = totalPayment - loanAmount;
+                    totalInterestInput.value = formatNumber(totalInterest.toFixed(2));
+                    
+                    // Calculate processing fees
+                    const processingFees = calculateProcessingFees(loanAmount);
+                    processingFeesInput.value = formatNumber(processingFees.toFixed(2));
+                    
+                    // Update DBR calculator with new EMI amount
+                    updateDBRCalculator();
+                } else {
+                    // Clear outputs if inputs are missing
+                    emiInput.value = '';
+                    totalPaymentInput.value = '';
+                    totalInterestInput.value = '';
+                    processingFeesInput.value = '';
+                }
             }
             
-            // Function to validate payment date
+            // Function to validate payment date based on loan type
             function validatePaymentDate() {
-                const disbursalDate = new Date();
+                const disbursalDate = new Date(disbursalDateInput.value);
                 const firstPaymentDate = new Date(firstPaymentDateInput.value);
                 const loanType = loanTypeSelect.value;
                 
-                let maxDays = 0;
-                if (loanType === 'fresh' || loanType === 'topup') {
-                    maxDays = 60;
-                } else if (loanType === 'takeover') {
-                    maxDays = 90;
+                if (!disbursalDate || !firstPaymentDate) {
+                    return true; // Skip validation if dates aren't set
                 }
                 
                 const daysDifference = Math.floor((firstPaymentDate - disbursalDate) / (1000 * 60 * 60 * 24));
                 
-                if (daysDifference > maxDays) {
-                    dateErrorMsg.textContent = `Error: First Payment Date Cannot Be More Than ${maxDays} Days After Disbursal For ${loanType} Loans.`;
+                // Get day range allowed for this loan type
+                const [minDays, maxDays] = getDayRangeFromLoanType(loanType);
+                
+                if (daysDifference < minDays || daysDifference > maxDays) {
+                    dateErrorMsg.textContent = `Error: First Payment Date Must Be Between ${minDays} and ${maxDays} Days After Disbursal Date.`;
                     dateErrorMsg.classList.remove('hidden');
                     return false;
                 } else if (firstPaymentDate <= disbursalDate) {
@@ -986,19 +1088,51 @@
                 }
             }
             
-            // Function to generate EMI payment schedule
+            // Function to adjust first payment date based on loan type
+            function adjustFirstPaymentDate() {
+                const disbursalDate = new Date(disbursalDateInput.value);
+                if (!disbursalDate) return;
+                
+                const loanType = loanTypeSelect.value;
+                const [minDays, maxDays] = getDayRangeFromLoanType(loanType);
+                
+                // Set first payment date to middle of the allowed range by default
+                const midDays = Math.floor((minDays + maxDays) / 2);
+                const newPaymentDate = new Date(disbursalDate);
+                newPaymentDate.setDate(disbursalDate.getDate() + midDays);
+                
+                firstPaymentDateInput.value = newPaymentDate.toISOString().split('T')[0];
+                updateDaysBetween();
+            }
+            
+            // Function to generate EMI payment schedule 
             function generateEMISchedule() {
                 const loanAmount = parseFloat(loanAmountInput.value) || 0;
                 const reducingRate = parseFloat(reducingRateInput.value) || 0;
                 const tenureMonths = parseInt(tenureMonthsInput.value) || 0;
-                const emi = calculateEMI(loanAmount, reducingRate, tenureMonths);
+                const loanType = loanTypeSelect.value;
                 
                 if (loanAmount <= 0 || tenureMonths <= 0) {
                     return [];
                 }
                 
+                // Determine initial principal based on grace period
+                let initialPrincipal = loanAmount;
                 const monthlyRate = reducingRate / 12 / 100;
-                let remainingPrincipal = loanAmount;
+                const gracePeriodMonths = getGracePeriodFromLoanType(loanType);
+                
+                if (gracePeriodMonths === 1) {
+                    // Add 1 month of interest accrual
+                    const interest1Month = loanAmount * monthlyRate;
+                    initialPrincipal = loanAmount + interest1Month;
+                } else if (gracePeriodMonths === 2) {
+                    // Add 2 months of interest accrual
+                    const interest2Months = loanAmount * monthlyRate * 2;
+                    initialPrincipal = loanAmount + interest2Months;
+                }
+                
+                const emi = calculateStandardEMI(initialPrincipal, reducingRate, tenureMonths);
+                let remainingPrincipal = initialPrincipal;
                 const schedule = [];
                 
                 for (let month = 1; month <= tenureMonths; month++) {
@@ -1120,6 +1254,7 @@
                 
                 const reducingRate = parseFloat(reducingRateInput.value) || 0;
                 const tenureMonths = parseInt(tenureMonthsInput.value) || 0;
+                const loanType = loanTypeSelect.value;
                 const allowedLiability = grossSalary * 0.4999; // 49.99% of gross salary
                 
                 // Get existing loans installments
@@ -1133,7 +1268,7 @@
                 document.querySelectorAll('.credit-card-amount').forEach(input => {
                     totalCCLimit += parseFloat(input.value) || 0;
                 });
-                const dbrCC = totalCCLimit * 0.03;
+                const dbrCC = totalCCLimit * 0.05; // Changed from 0.03 to 0.05
                 
                 // Current liabilities excluding EMI
                 const currentLiabilities = totalExistingLoansInstallments + dbrCC;
@@ -1154,7 +1289,7 @@
                 
                 while (high - low > 1) {
                     const mid = (low + high) / 2;
-                    const emi = calculateEMI(mid, reducingRate, tenureMonths);
+                    const emi = calculateEMIWithGracePeriod(mid, reducingRate, tenureMonths, loanType);
                     
                     if (emi <= availableForEMI) {
                         low = mid;
@@ -1179,7 +1314,7 @@
                 const bank1Rate = parseFloat(bank1RateInput.value) || 0;
                 
                 if (bank1LoanAmount > 0 && bank1Tenure > 0 && bank1Rate > 0) {
-                    const bank1EMI = calculateEMI(bank1LoanAmount, bank1Rate, bank1Tenure);
+                    const bank1EMI = calculateStandardEMI(bank1LoanAmount, bank1Rate, bank1Tenure);
                     bank1EMIInput.value = formatNumber(bank1EMI.toFixed(2));
                     
                     const bank1TotalInterest = (bank1EMI * bank1Tenure) - bank1LoanAmount;
@@ -1192,7 +1327,7 @@
                 const bank2Rate = parseFloat(bank2RateInput.value) || 0;
                 
                 if (bank2LoanAmount > 0 && bank2Tenure > 0 && bank2Rate > 0) {
-                    const bank2EMI = calculateEMI(bank2LoanAmount, bank2Rate, bank2Tenure);
+                    const bank2EMI = calculateStandardEMI(bank2LoanAmount, bank2Rate, bank2Tenure);
                     bank2EMIInput.value = formatNumber(bank2EMI.toFixed(2));
                     
                     const bank2TotalInterest = (bank2EMI * bank2Tenure) - bank2LoanAmount;
@@ -1232,9 +1367,10 @@
                 const specialNoteText = specialNote.value;
                 const totalOutstanding = parseFloat(totalOutstandingInput.value.replace(/,/g, '')) || 0;
                 const loanType = loanTypeSelect.value;
+                const loanTypeText = loanType.replace(/-/g, ' ').toUpperCase();
                 
                 let message = " *LOAN ELIGIBILITY* \n\n";
-                message += `LOAN TYPE: ${loanType === "fresh" ? "FRESH" : loanType === "topup" ? "TOP-UP" : "BUYOUT"}\n`;
+                message += `LOAN TYPE: ${loanTypeText}\n`;
                 message += `MAX LOAN ELIGIBILITY: AED ${formatNumber(maxLoanEligibility.toFixed(2))}\n`;
                 message += `LOAN AMOUNT: AED ${formatNumber(loanAmount.toFixed(2))}\n`;
                 message += `TENURE: ${tenureMonths} months\n`;
@@ -1581,7 +1717,9 @@
             document.querySelector('.credit-card-outstanding').addEventListener('input', updateDBRCalculator);
             
             loanTypeSelect.addEventListener('change', function() {
+                adjustFirstPaymentDate();
                 validatePaymentDate();
+                updateDaysBetween();
                 updateEMICalculator();
             });
             
@@ -1593,9 +1731,18 @@
             });
             reducingRateInput.addEventListener('input', updateEMICalculator);
             
-            // Date validation
-            disbursalDateInput.addEventListener('change', validatePaymentDate);
-            firstPaymentDateInput.addEventListener('change', validatePaymentDate);
+            // Date validation and days between calculation
+            disbursalDateInput.addEventListener('change', function() {
+                validatePaymentDate();
+                updateDaysBetween();
+                updateEMICalculator();
+            });
+            
+            firstPaymentDateInput.addEventListener('change', function() {
+                validatePaymentDate();
+                updateDaysBetween();
+                updateEMICalculator();
+            });
             
             // Bank comparison inputs
             bank1LoanAmountInput.addEventListener('input', updateBankComparison);
@@ -1636,7 +1783,7 @@
                 grossSalaryInput.value = '';
                 document.querySelector('.credit-card-amount').value = '';
                 document.querySelector('.credit-card-outstanding').value = '';
-                loanTypeSelect.value = 'fresh';
+                loanTypeSelect.value = 'fresh-0-30';
                 multiplesOfSalaryInput.value = '15';
                 tenureMonthsInput.value = '48';
                 loanAmountInput.value = '';
@@ -1680,6 +1827,7 @@
                 const nextMonth = new Date(today);
                 nextMonth.setMonth(nextMonth.getMonth() + 1);
                 firstPaymentDateInput.value = nextMonth.toISOString().split('T')[0];
+                updateDaysBetween(); // Calculate days between
                 
                 // Hide sections
                 emiChartSection.classList.add('hidden');
@@ -1719,6 +1867,18 @@
             updateGrossSalary();
             updateDBRCalculator();
             updateEMICalculator();
+            
+            // Test with example values (can be removed in production)
+            function testWithExample() {
+                loanTypeSelect.value = 'takeover-60-90';
+                tenureMonthsInput.value = '48';
+                loanAmountInput.value = '100000';
+                reducingRateInput.value = '10.5';
+                updateEMICalculator();
+            }
+            
+            // Uncomment below to test example
+            // testWithExample();
         });
     </script>
 </body>
