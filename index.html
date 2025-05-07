@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EMI & DBR Calculator</title>
+    <title>Customer Eligibility Check</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script>
         tailwind.config = {
             theme: {
@@ -17,6 +18,9 @@
                         lightyellow: '#ffedd8',
                         lightred: '#ffccd5',
                         lightgray: '#f3f4f6'
+                    },
+                    fontFamily: {
+                        tahoma: ['Tahoma', 'Geneva', 'sans-serif']
                     }
                 }
             },
@@ -28,6 +32,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tahoma:wght@400;700&display=swap');
+        
+        body {
+            font-family: 'Tahoma', Geneva, sans-serif;
+        }
+        
         @keyframes redFlash {
             0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
             70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
@@ -56,11 +66,107 @@
             background-color: rgba(248, 113, 113, 0.1) !important;
             border-color: #f87171 !important;
         }
+        
+        .card-settled {
+            opacity: 0.6;
+            background-color: #f3f4f6 !important;
+            border: 1px dashed #9ca3af !important;
+        }
+        
+        .dark .card-settled {
+            background-color: #374151 !important;
+            border: 1px dashed #6b7280 !important;
+        }
+        
+        /* Modal styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 90%;
+            max-height: 90%;
+            overflow-y: auto;
+            width: 900px;
+        }
+        
+        .dark .modal-content {
+            background: #1f2937;
+            color: white;
+        }
+        
+        /* Theme toggle switch */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .toggle-slider {
+            background-color: #5D5CDE;
+        }
+        
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
     </style>
 </head>
-<body class="bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
-    <div class="container mx-auto px-4 py-8 max-w-6xl" id="printableArea">
-        <h1 class="text-3xl font-bold text-center text-primary dark:text-white mb-8">DBR & EMI CALCULATOR</h1>
+<body class="bg-gray-50 transition-colors duration-200 font-tahoma">
+    <!-- Theme toggle -->
+    <div class="flex justify-end items-center p-4">
+        <span class="mr-2 text-gray-700 dark:text-gray-300"><i class="fas fa-sun"></i></span>
+        <label class="toggle-switch">
+            <input type="checkbox" id="themeToggle">
+            <span class="toggle-slider"></span>
+        </label>
+        <span class="ml-2 text-gray-700 dark:text-gray-300"><i class="fas fa-moon"></i></span>
+    </div>
+    
+    <div class="container mx-auto px-4 py-4 max-w-6xl" id="printableArea">
+        <h1 class="text-3xl font-bold text-center text-primary dark:text-white mb-8">Customer Eligibility Check</h1>
                 
         <!-- WhatsApp & Print Integration -->
         <div class="mb-8 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border-l-4 border-primary">
@@ -72,15 +178,15 @@
             </div>
             
             <div class="flex flex-wrap justify-center gap-4">
-	<a href="https://script.google.com/macros/s/AKfycbyt6zvvO5POe2jMnyaR2bJOPu09L2f2Rr3Aeh72_APIR1C-6JVzSDOZvGfi4ZOZbQL0/exec" class="bg-red-500 text-white p-3 	rounded-md hover:bg-opacity-80 text-base">Tracker</a>
-    <a href="advcalc.html" class="bg-orange-500 text-white p-3 rounded-md hover:bg-opacity-80 text-base">Advanced Calculator</a>
-    <button id="showEmiChartBtn" class="bg-yellow-400 text-white p-3 rounded-md hover:bg-opacity-80 text-base">EMI Chart</button>
-    <button id="printBtn" class="bg-blue-500 text-white p-3 rounded-md hover:bg-opacity-80 text-base">Print Page</button>
-    <button id="exportPdfBtn" class="bg-blue-800 text-white p-3 rounded-md hover:bg-opacity-80 text-base">Export PDF</button>
-    <button id="loanComparisonBtn" class="bg-purple-800 text-white p-3 rounded-md hover:bg-opacity-80 text-base">Compare Loans</button>
-    <button id="sendWhatsAppBtn" class="bg-green-600 text-white p-3 rounded-md hover:bg-opacity-80 text-base">Share WhatsApp</button>
-    <a href="rategrid.html" class="bg-teal-700 text-white p-3 rounded-md hover:bg-opacity-80 text-base">Rate Grid</a>
-</div>
+                <a href="https://script.google.com/macros/s/AKfycbyt6zvvO5POe2jMnyaR2bJOPu09L2f2Rr3Aeh72_APIR1C-6JVzSDOZvGfi4ZOZbQL0/exec" class="bg-red-500 text-white p-3 rounded-md hover:bg-opacity-80 text-base">Tracker</a>
+                <a href="advcalc.html" class="bg-orange-500 text-white p-3 rounded-md hover:bg-opacity-80 text-base">Advanced Calculator</a>
+                <button id="showEmiChartBtn" class="bg-yellow-400 text-white p-3 rounded-md hover:bg-opacity-80 text-base">EMI Chart</button>
+                <button id="printBtn" class="bg-blue-500 text-white p-3 rounded-md hover:bg-opacity-80 text-base">Print Page</button>
+                <button id="exportPdfBtn" class="bg-blue-800 text-white p-3 rounded-md hover:bg-opacity-80 text-base">Export PDF</button>
+                <button id="loanComparisonBtn" class="bg-purple-800 text-white p-3 rounded-md hover:bg-opacity-80 text-base">Compare Loans</button>
+                <button id="sendWhatsAppBtn" class="bg-green-600 text-white p-3 rounded-md hover:bg-opacity-80 text-base">Share WhatsApp</button>
+                <a href="rategrid.html" class="bg-teal-700 text-white p-3 rounded-md hover:bg-opacity-80 text-base">Rate Grid</a>
+            </div>
         </div>
         
         <!-- Main Calculator Container -->
@@ -92,7 +198,7 @@
                 
                 <div class="space-y-4">
                     <div class="grid grid-cols-3 gap-4 items-center">
-                        <label class="text-gray-700 dark:text-gray-300 font-medium">SALARY (AED):</label>
+                        <label class="text-gray-700 dark:text-gray-300 font-medium">Salary (AED):</label>
                         <input type="number" id="salary" class="col-span-2 border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white">
                     </div>
                     
@@ -118,7 +224,7 @@
                     
                     <div class="flex justify-start gap-2 mb-4">
                         <button id="addMoreAddbackBtn" class="bg-primary text-white p-2 rounded-md hover:bg-opacity-80">+ Add More</button>
-                        <button id="removeAddbackBtn" class="bg-secondary text-white p-2 rounded-md hover:bg-opacity-80 disabled:opacity-50" disabled>- Remove</button>
+                        <button id="removeAddbackBtn" class="bg-primary text-white p-2 rounded-md hover:bg-opacity-80 disabled:opacity-50" disabled>- Remove</button>
                     </div>
                     
                     <div class="grid grid-cols-3 gap-4 items-center">
@@ -146,10 +252,13 @@
 
                     <!-- Credit Cards Section -->
                     <div id="creditCardsContainer">
-                        <div class="grid grid-cols-3 gap-4 items-center credit-card-entry">
-                            <label class="text-gray-700 dark:text-gray-300 font-medium">Credit Card 1:</label>
-                            <div class="col-span-2 flex gap-2">
-                                <select class="border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white w-1/3">
+                        <div class="credit-card-entry mb-4">
+                            <div class="flex justify-between items-center mb-2">
+                                <label class="text-gray-700 dark:text-gray-300 font-medium">Credit Card 1:</label>
+                                <button class="settle-card-btn bg-primary text-white px-4 py-1 rounded hover:bg-opacity-80">Settle</button>
+                            </div>
+                            <div class="grid grid-cols-4 gap-2">
+                                <select class="card-bank-select border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white col-span-1">
                                     <option value="ADCB">ADCB</option>
                                     <option value="ENBD">ENBD</option>
                                     <option value="EIB">EIB</option>
@@ -162,17 +271,15 @@
                                     <option value="DIB">DIB</option>
                                     <option value="OTHER">OTHER</option>
                                 </select>
-                                <div class="flex flex-col w-2/3 space-y-1">
-                                    <input type="number" placeholder="Credit Limit" class="credit-card-amount border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white">
-                                    <input type="number" placeholder="Outstanding" class="credit-card-outstanding border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white">
-                                </div>
+                                <input type="number" placeholder="Credit Limit" class="credit-card-amount border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white col-span-1">
+                                <input type="number" placeholder="Outstanding" class="credit-card-outstanding border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white col-span-2">
                             </div>
                         </div>
                     </div>
                     
                     <div class="flex gap-2">
-                        <button id="addCreditCardBtn" class="bg-primary text-white p-2 rounded-md hover:bg-opacity-50">+ Add Card</button>
-                        <button id="removeCreditCardBtn" class="bg-secondary text-white p-2 rounded-md hover:bg-opacity-80 disabled:opacity-50" disabled>- Remove Card</button>
+                        <button id="addCreditCardBtn" class="bg-primary text-white p-2 rounded-md hover:bg-opacity-80">+ Add Card</button>
+                        <button id="removeCreditCardBtn" class="bg-primary text-white p-2 rounded-md hover:bg-opacity-80 disabled:opacity-50" disabled>- Remove Card</button>
                     </div>
                     
                     <div class="grid grid-cols-3 gap-4 items-center">
@@ -256,7 +363,7 @@
                     
                     <div class="grid grid-cols-3 gap-4 items-center">
                         <label class="text-gray-700 dark:text-gray-300 font-medium">Tenure:</label>
-                        <input type="number" id="tenureMonths" class="col-span-2 border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white" value="" min="1" max="300">
+                        <input type="number" id="tenureMonths" class="col-span-2 border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white" value="48" min="1" max="300">
                     </div>
                     
                     <div class="grid grid-cols-3 gap-4 items-center">
@@ -269,7 +376,7 @@
                     
                     <div class="grid grid-cols-3 gap-4 items-center">
                         <label class="text-gray-700 dark:text-gray-300 font-medium">Reducing Rate %:</label>
-                        <input type="number" id="reducingRate" step="0.01" class="col-span-2 border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white" value="">
+                        <input type="number" id="reducingRate" step="0.01" class="col-span-2 border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white" value="10">
                     </div>
                     
                     <div class="grid grid-cols-3 gap-4 items-center">
@@ -309,7 +416,7 @@
                     
                     <div class="grid grid-cols-2 gap-4 mt-6">
                         <button id="findOptimalLoanBtn" class="bg-primary text-white p-3 rounded-md hover:bg-opacity-80 text-base">Find Optimal Loan Amount</button>
-                        <button id="resetBtn" class="bg-gray-500 text-white p-3 rounded-md hover:bg-opacity-80 text-base">Reset</button>
+                        <button id="resetBtn" class="bg-primary text-white p-3 rounded-md hover:bg-opacity-80 text-base">Reset</button>
                     </div>
                 </div>
             </div>
@@ -318,7 +425,7 @@
         <!-- EMI Chart Section -->
         <div id="emiChartSection" class="mt-8 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border-l-4 border-primary hidden">
             <h2 class="text-2xl font-bold text-primary dark:text-white mb-6">EMI PAYMENT SCHEDULE</h2>
-            <div class="relative" style="height: 400px;">
+            <div class="relative" style="height: 350px;">
                 <canvas id="emiChart"></canvas>
             </div>
             <div class="mt-6 overflow-x-auto">
@@ -338,16 +445,19 @@
                 </table>
             </div>
         </div>
-        
-        <!-- Loan Comparison Section -->
-        <div id="loanComparisonSection" class="mt-8 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border-l-4 border-primary hidden">
-            <h2 class="text-2xl font-bold text-primary dark:text-white mb-6">LOAN COMPARISON</h2>
+    </div>
+    
+    <!-- Loan Comparison Modal -->
+    <div id="loanComparisonModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-primary dark:text-white">LOAN COMPARISON</h2>
+                <button id="closeComparisonModal" class="text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-400 text-2xl">&times;</button>
+            </div>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <!-- Bank 1 -->
+                <!-- First Bank -->
                 <div class="space-y-4">
-                    <h3 class="text-xl font-semibold text-primary dark:text-white">Bank 1</h3>
-                    
                     <div class="grid grid-cols-3 gap-4 items-center">
                         <label class="text-gray-700 dark:text-gray-300 font-medium">Bank Name:</label>
                         <input type="text" id="bank1Name" class="col-span-2 border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white">
@@ -379,10 +489,8 @@
                     </div>
                 </div>
                 
-                <!-- Bank 2 -->
+                <!-- Second Bank -->
                 <div class="space-y-4">
-                    <h3 class="text-xl font-semibold text-primary dark:text-white">Bank 2</h3>
-                    
                     <div class="grid grid-cols-3 gap-4 items-center">
                         <label class="text-gray-700 dark:text-gray-300 font-medium">Bank Name:</label>
                         <input type="text" id="bank2Name" class="col-span-2 border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white">
@@ -423,13 +531,12 @@
     </div>
     
     <script>
-        // Check for dark mode preference
-        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            document.documentElement.classList.add('dark');
-        }
+        // Theme toggle functionality
+        const themeToggle = document.getElementById('themeToggle');
         
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
-            if (event.matches) {
+        // Default is light mode (set in HTML)
+        themeToggle.addEventListener('change', function() {
+            if (this.checked) {
                 document.documentElement.classList.add('dark');
             } else {
                 document.documentElement.classList.remove('dark');
@@ -492,7 +599,8 @@
             const removeAddbackBtn = document.getElementById('removeAddbackBtn');
             const specialNote = document.getElementById('specialNote');
             const loanComparisonBtn = document.getElementById('loanComparisonBtn');
-            const loanComparisonSection = document.getElementById('loanComparisonSection');
+            const loanComparisonModal = document.getElementById('loanComparisonModal');
+            const closeComparisonModalBtn = document.getElementById('closeComparisonModal');
             const dbrCalculatorSection = document.getElementById('dbrCalculator');
             const emiCalculatorSection = document.getElementById('emiCalculator');
             
@@ -532,6 +640,9 @@
             let addbackCount = 1;
             let addbackData = {};
             
+            // Track settled credit cards
+            let settledCards = new Set();
+            
             // Existing Loans functionality
             addExistingLoanBtn.addEventListener('click', function() {
                 existingLoansContainer.classList.remove('hidden');
@@ -554,7 +665,7 @@
                     <div class="col-span-2 flex">
                         <input type="number" placeholder="Installment" class="loan-installment border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white w-1/2 mr-1">
                         <input type="number" placeholder="Outstanding" class="loan-outstanding border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white w-1/2">
-                        <button class="remove-loan ml-2 bg-red-500 text-white p-2 rounded-md hover:bg-opacity-80">×</button>
+                        <button class="remove-loan ml-2 bg-primary text-white p-2 rounded-md hover:bg-opacity-80">×</button>
                     </div>
                 `;
                 
@@ -842,6 +953,32 @@
                 return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
             }
             
+            // Handle settle card button clicks
+            creditCardsContainer.addEventListener('click', function(e) {
+                if (e.target.classList.contains('settle-card-btn')) {
+                    const cardEntry = e.target.closest('.credit-card-entry');
+                    const cardIndex = Array.from(document.querySelectorAll('.credit-card-entry')).indexOf(cardEntry);
+                    
+                    // Toggle settled state
+                    if (settledCards.has(cardIndex)) {
+                        settledCards.delete(cardIndex);
+                        cardEntry.classList.remove('card-settled');
+                        e.target.textContent = 'Settle';
+                        e.target.classList.remove('bg-red-500');
+                        e.target.classList.add('bg-primary');
+                    } else {
+                        settledCards.add(cardIndex);
+                        cardEntry.classList.add('card-settled');
+                        e.target.textContent = 'Unsettle';
+                        e.target.classList.remove('bg-primary');
+                        e.target.classList.add('bg-red-500');
+                    }
+                    
+                    // Update calculations
+                    updateDBRCalculator();
+                }
+            });
+            
             // Function to update DBR calculator
             function updateDBRCalculator() {
                 const grossSalary = parseFloat(grossSalaryInput.value.replace(/,/g, '')) || 0;
@@ -862,12 +999,19 @@
                 let totalCCLimit = 0;
                 let totalCCOutstanding = 0;
                 
-                document.querySelectorAll('.credit-card-entry').forEach(entry => {
+                document.querySelectorAll('.credit-card-entry').forEach((entry, index) => {
                     const limitInput = entry.querySelector('.credit-card-amount');
                     const outstandingInput = entry.querySelector('.credit-card-outstanding');
+                    const limit = parseFloat(limitInput.value) || 0;
+                    const outstanding = parseFloat(outstandingInput.value) || 0;
                     
-                    totalCCLimit += parseFloat(limitInput.value) || 0;
-                    totalCCOutstanding += parseFloat(outstandingInput.value) || 0;
+                    // Only include in Total CC Limit if not settled
+                    if (!settledCards.has(index)) {
+                        totalCCLimit += limit;
+                    }
+                    
+                    // Always include in outstanding
+                    totalCCOutstanding += outstanding;
                 });
                 
                 totalCCLimitInput.value = formatNumber(totalCCLimit.toFixed(2));
@@ -966,8 +1110,11 @@
                 
                 // Calculate credit card DBR
                 let totalCCLimit = 0;
-                document.querySelectorAll('.credit-card-amount').forEach(input => {
-                    totalCCLimit += parseFloat(input.value) || 0;
+                document.querySelectorAll('.credit-card-entry').forEach((entry, index) => {
+                    if (!settledCards.has(index)) {
+                        const limitInput = entry.querySelector('.credit-card-amount');
+                        totalCCLimit += parseFloat(limitInput.value) || 0;
+                    }
                 });
                 
                 const dbrCC = totalCCLimit * 0.05; // Changed from 0.03 to 0.05
@@ -1231,7 +1378,9 @@
                 const tableBody = document.getElementById('emiScheduleBody');
                 tableBody.innerHTML = '';
                 
-                schedule.forEach(entry => {
+                // Display all months in the schedule
+                for (let i = 0; i < schedule.length; i++) {
+                    const entry = schedule[i];
                     const row = document.createElement('tr');
                     row.innerHTML = `
                         <td class="border border-gray-300 p-2 text-center">${entry.month}</td>
@@ -1241,7 +1390,7 @@
                         <td class="border border-gray-300 p-2 text-right">${formatNumber(entry.balance.toFixed(2))}</td>
                     `;
                     tableBody.appendChild(row);
-                });
+                }
             }
             
             // Function to find optimal loan amount for 49.99% DBR
@@ -1265,8 +1414,11 @@
                 
                 // Calculate credit card DBR
                 let totalCCLimit = 0;
-                document.querySelectorAll('.credit-card-amount').forEach(input => {
-                    totalCCLimit += parseFloat(input.value) || 0;
+                document.querySelectorAll('.credit-card-entry').forEach((entry, index) => {
+                    if (!settledCards.has(index)) {
+                        const limitInput = entry.querySelector('.credit-card-amount');
+                        totalCCLimit += parseFloat(limitInput.value) || 0;
+                    }
                 });
                 const dbrCC = totalCCLimit * 0.05; // Changed from 0.03 to 0.05
                 
@@ -1367,35 +1519,43 @@
                 const specialNoteText = specialNote.value;
                 const totalOutstanding = parseFloat(totalOutstandingInput.value.replace(/,/g, '')) || 0;
                 const loanType = loanTypeSelect.value;
-                const loanTypeText = loanType.replace(/-/g, ' ').toUpperCase();
+                const grossSalary = parseFloat(grossSalaryInput.value.replace(/,/g, '')) || 0;
+                const daysBetween = daysBetweenInput.value;
                 
-                let message = " *LOAN ELIGIBILITY* \n\n";
-                message += `LOAN TYPE: ${loanTypeText}\n`;
-                message += `MAX LOAN ELIGIBILITY: AED ${formatNumber(maxLoanEligibility.toFixed(2))}\n`;
-                message += `LOAN AMOUNT: AED ${formatNumber(loanAmount.toFixed(2))}\n`;
-                message += `TENURE: ${tenureMonths} months\n`;
-                message += `REDUCING RATE: ${reducingRate}%\n`;
-                message += `FLAT RATE: ${flatRate.toFixed(2)}%\n`;
-                message += `*INSTALLMENT:* AED ${formatNumber(emi.toFixed(2))}\n`;
-                message += `TOTAL PAYMENT: AED ${formatNumber(totalPayment.toFixed(2))}\n`;
-                message += `TOTAL INTEREST: AED ${formatNumber(totalInterest.toFixed(2))}\n`;
-                message += `PROCESSING FEES + VAT: AED ${formatNumber(processingFees.toFixed(2))}\n`;
-        		message += "PROCESSING FEES: 0 FEES \n";
-                message += `TOTAL OUTSTANDING: AED ${formatNumber(totalOutstanding.toFixed(2))}\n`;
-                message += `CASH IN HAND: AED ${formatNumber(cashInHand.toFixed(2))}\n`;
-                message += `DBR %: ${dbrPercentage.toFixed(2)}%\n`;
+                // Restructured message format based on request
+                let message = "";
+                
+                // Heading 1 - Eligibility details
+                message += "*Eligibility details*\n";
+                message += `Max Loan Eligibity: AED ${formatNumber(maxLoanEligibility.toFixed(2))}\n`;
+                message += `Loan Amount: AED ${formatNumber(loanAmount.toFixed(2))}\n`;
+                message += `Tenure: ${tenureMonths} Months\n`;
+                message += `Reducing Rate: ${reducingRate}%\n`;
+                message += `Flat Rate: ${flatRate.toFixed(2)}%\n`;
+                message += `EMI: AED ${formatNumber(emi.toFixed(2))}\n\n`;
+                
+                // Heading 2 - Charges and other details
+                message += "*Charges and other details*\n";
+                message += `Total Payment: AED ${formatNumber(totalPayment.toFixed(2))}\n`;
+                message += `Total Interest: AED ${formatNumber(totalInterest.toFixed(2))}\n`;
+                message += `Processing Fees + VAT: AED ${formatNumber(processingFees.toFixed(2))}\n`;
+                message += `Insurance Fees (AED): 0\n\n`;
+                
+                // Heading 3 - Liabilities & Other details
+                message += "*Liabilities & Other details*\n";
+                message += `Loan Type: ${loanType.replace(/-/g, ' ').toUpperCase()}\n`;
+                message += `Days Between: ${daysBetween}\n`;
+                message += `Total Outstanding: AED ${formatNumber(totalOutstanding.toFixed(2))}\n`;
+                message += `Cash In Hand - NetPay: AED ${formatNumber(cashInHand.toFixed(2))}\n`;
+                message += `Gross Salary: AED ${formatNumber(grossSalary.toFixed(2))}\n`;
+                message += `DBR: ${dbrPercentage.toFixed(2)}%\n`;
                 
                 if (specialNoteText) {
-                    message += `\n*SPECIAL NOTE:*\n`;
-                    specialNoteText.split('\n')
-                        .filter(line => line.trim() !== '')
-                        .forEach(line => {
-                            message += `• ${line}\n`;
-                        });
+                    message += `\n*Special Note:*\n${specialNoteText}\n`;
                 }
                 
-                message += "\n-----------\n";
-                message += "_The specifics of the installment plan and associated offerings may vary slightly based on the information provided in your profile._";
+                message += "\n-------------------------\n";
+                message += "The specifics of the installment plan and associated offerings may vary slightly based on the information provided in your profile.";
                 
                 return encodeURIComponent(message);
             }
@@ -1410,6 +1570,7 @@
                             background-color: white; 
                             margin: 0;
                             padding: 0;
+                            font-family: 'Tahoma', Geneva, sans-serif;
                         }
                         .container { 
                             width: 100%; 
@@ -1418,7 +1579,7 @@
                         }
                         
                         /* Hide elements not needed in print */
-                        button, .non-printable { 
+                        button, .non-printable, .toggle-switch, #themeToggle { 
                             display: none !important; 
                         }
                         
@@ -1428,15 +1589,18 @@
                         }
                         
                         /* Show only DBR Calculator, EMI Calculator and EMI Chart */
-                        #printableArea > div:nth-child(1),  /* Main heading */
+                        #printableArea > h1,
+                        #printableArea > div:nth-child(2),  /* SHARE DETAILS */
                         #printableArea > div:nth-child(3),  /* Grid with DBR and EMI calculators */
                         #emiChartSection {
                             display: block !important;
+                            page-break-inside: avoid;
                         }
                         
-                        /* Force EMI chart to be visible */
+                        /* Force EMI chart to be visible on a new page */
                         #emiChartSection.hidden {
                             display: block !important;
+                            page-break-before: always;
                         }
                         
                         /* Hide buttons within these sections */
@@ -1447,7 +1611,8 @@
                         #removeCreditCardBtn,
                         #findOptimalLoanBtn,
                         #resetBtn,
-                        #addExistingLoanBtn {
+                        #addExistingLoanBtn,
+                        .settle-card-btn {
                             display: none !important;
                         }
                         
@@ -1463,10 +1628,10 @@
                             margin-top: 20px;
                             color: #5D5CDE !important;
                         }
-                        
-                        /* Force break before EMI chart */
-                        #emiChartSection {
-                            page-break-before: always;
+
+                        /* Make sure the full EMI schedule is visible */
+                        #emiScheduleBody tr {
+                            page-break-inside: avoid;
                         }
                     }
                 `;
@@ -1493,45 +1658,10 @@
                 loadingDiv.innerHTML = '<div class="bg-white p-4 rounded-lg">Generating PDF...</div>';
                 document.body.appendChild(loadingDiv);
                 
-                // Only include DBR Calculator, EMI Calculator and EMI Chart in PDF
-                const contentDiv = document.createElement('div');
-                contentDiv.style.width = '100%';
-                contentDiv.style.backgroundColor = 'white';
-                contentDiv.style.padding = '20px';
-                
-                // Clone required sections
-                const h1 = document.querySelector('h1').cloneNode(true);
-                
-                const dbrCalcDiv = document.querySelector('.bg-white.dark\\:bg-gray-800.p-6.rounded-lg.shadow-md.border-l-4.border-primary:nth-child(1)').cloneNode(true);
-                // Remove buttons from the clone
-                dbrCalcDiv.querySelectorAll('button').forEach(btn => btn.remove());
-                
-                const emiCalcDiv = document.querySelector('.bg-white.dark\\:bg-gray-800.p-6.rounded-lg.shadow-md.border-l-4.border-primary:nth-child(2)').cloneNode(true);
-                // Remove buttons from the clone
-                emiCalcDiv.querySelectorAll('button').forEach(btn => btn.remove());
-                
                 // Force generate EMI chart if not already done
                 if (emiChartSection.classList.contains('hidden')) {
                     displayEMIChart();
                 }
-                
-                const emiChartDiv = emiChartSection.cloneNode(true);
-                
-                // Add cloned content to our temporary div
-                contentDiv.appendChild(h1);
-                
-                const calculatorsDiv = document.createElement('div');
-                calculatorsDiv.className = 'grid grid-cols-2 gap-6';
-                calculatorsDiv.appendChild(dbrCalcDiv);
-                calculatorsDiv.appendChild(emiCalcDiv);
-                
-                contentDiv.appendChild(calculatorsDiv);
-                contentDiv.appendChild(emiChartDiv);
-                
-                // Temporarily add to document for html2canvas
-                contentDiv.style.position = 'absolute';
-                contentDiv.style.top = '-9999px';
-                document.body.appendChild(contentDiv);
                 
                 // Define PDF dimensions
                 const pageWidth = 210; // A4 width in mm
@@ -1541,45 +1671,86 @@
                 const { jsPDF } = window.jspdf;
                 const pdf = new jsPDF('p', 'mm', 'a4');
                 
-                // Use html2canvas to capture each section
-                Promise.all([
-                    html2canvas(h1, {scale: 2}),
-                    html2canvas(calculatorsDiv, {scale: 2}),
-                    html2canvas(emiChartDiv, {scale: 2})
-                ]).then(canvases => {
-                    // Add h1 to first page
-                    const h1Canvas = canvases[0];
-                    const h1ImgData = h1Canvas.toDataURL('image/png');
-                    pdf.addImage(h1ImgData, 'PNG', 10, 10, 190, (h1Canvas.height * 190) / h1Canvas.width);
+                // Capture share details, DBR calculator and EMI calculator for page 1
+                const headerElement = document.querySelector('h1');
+                const shareDetailsElement = document.querySelector('.container > div:nth-child(2)');
+                const calculatorsContainer = document.querySelector('.grid.grid-cols-1.md\\:grid-cols-2.gap-6');
+                
+                // Hide elements we don't want in the PDF
+                const settleButtons = document.querySelectorAll('.settle-card-btn');
+                settleButtons.forEach(btn => btn.style.display = 'none');
+                
+                // Create a temporary div to hold page 1 content
+                const page1Content = document.createElement('div');
+                page1Content.appendChild(headerElement.cloneNode(true));
+                page1Content.appendChild(shareDetailsElement.cloneNode(true));
+                page1Content.appendChild(calculatorsContainer.cloneNode(true));
+                
+                // Style for capture
+                page1Content.style.width = '100%';
+                page1Content.style.backgroundColor = 'white';
+                page1Content.style.padding = '10px';
+                page1Content.style.fontFamily = 'Tahoma, Geneva, sans-serif';
+                page1Content.style.position = 'absolute';
+                page1Content.style.top = '-9999px';
+                
+                // Append to document for html2canvas
+                document.body.appendChild(page1Content);
+                
+                // Capture page 1 with smaller scale to fit better
+                html2canvas(page1Content, { scale: 1.5 }).then(canvas1 => {
+                    const imgData1 = canvas1.toDataURL('image/jpeg', 0.95);
                     
-                    // Add calculators
-                    const calcCanvas = canvases[1];
-                    const calcImgData = calcCanvas.toDataURL('image/png');
-                    const calcHeight = (calcCanvas.height * 190) / calcCanvas.width;
+                    // Add to PDF (first page)
+                    const imgWidth = pageWidth - 10; // 5mm margin on each side
+                    const imgHeight = (canvas1.height * imgWidth) / canvas1.width;
                     
-                    // Check if it fits on first page, otherwise add new page
-                    if (20 + calcHeight > 280) {
+                    pdf.addImage(imgData1, 'JPEG', 5, 5, imgWidth, imgHeight);
+                    
+                    // Remove temporary element
+                    document.body.removeChild(page1Content);
+                    
+                    // Make a copy of the EMI chart section without the row limitation
+                    const fullEmiChartClone = emiChartSection.cloneNode(true);
+                    fullEmiChartClone.style.position = 'absolute';
+                    fullEmiChartClone.style.top = '-9999px';
+                    fullEmiChartClone.style.backgroundColor = 'white';
+                    fullEmiChartClone.style.width = '900px';
+                    fullEmiChartClone.style.padding = '10px';
+                    document.body.appendChild(fullEmiChartClone);
+                    
+                    // For EMI chart page, set a smaller scale
+                    html2canvas(fullEmiChartClone, { scale: 1.3 }).then(canvas2 => {
+                        const imgData2 = canvas2.toDataURL('image/jpeg', 0.95);
+                        
+                        // Add new page for EMI chart
                         pdf.addPage();
-                        pdf.addImage(calcImgData, 'PNG', 10, 10, 190, calcHeight);
-                    } else {
-                        pdf.addImage(calcImgData, 'PNG', 10, 30, 190, calcHeight);
-                    }
-                    
-                    // Add EMI chart on a new page
-                    pdf.addPage();
-                    const chartCanvas = canvases[2];
-                    const chartImgData = chartCanvas.toDataURL('image/png');
-                    pdf.addImage(chartImgData, 'PNG', 10, 10, 190, (chartCanvas.height * 190) / chartCanvas.width);
-                    
-                    // Save PDF
-                    pdf.save('EMI_DBR_Calculator.pdf');
-                    
-                    // Clean up
-                    document.body.removeChild(contentDiv);
-                    document.body.removeChild(loadingDiv);
+                        
+                        const chartWidth = pageWidth - 10;
+                        const chartHeight = (canvas2.height * chartWidth) / canvas2.width;
+                        
+                        pdf.addImage(imgData2, 'JPEG', 5, 5, chartWidth, chartHeight);
+                        
+                        // Clean up
+                        document.body.removeChild(fullEmiChartClone);
+                        
+                        // Save the PDF
+                        pdf.save('Customer_Eligibility_Check.pdf');
+                        
+                        // Show settle buttons again
+                        settleButtons.forEach(btn => btn.style.display = 'block');
+                        
+                        // Remove loading indicator
+                        document.body.removeChild(loadingDiv);
+                    }).catch(err => {
+                        console.error('Error capturing EMI chart:', err);
+                        settleButtons.forEach(btn => btn.style.display = 'block');
+                        document.body.removeChild(loadingDiv);
+                        alert('Error generating PDF. Please try again.');
+                    });
                 }).catch(err => {
-                    console.error('Error generating PDF:', err);
-                    document.body.removeChild(contentDiv);
+                    console.error('Error capturing page 1:', err);
+                    settleButtons.forEach(btn => btn.style.display = 'block');
                     document.body.removeChild(loadingDiv);
                     alert('Error generating PDF. Please try again.');
                 });
@@ -1590,11 +1761,14 @@
             addCreditCardBtn.addEventListener('click', function() {
                 cardCount++;
                 const creditCardDiv = document.createElement('div');
-                creditCardDiv.classList.add('grid', 'grid-cols-3', 'gap-4', 'items-center', 'credit-card-entry', 'mt-2');
+                creditCardDiv.classList.add('credit-card-entry', 'mb-4');
                 creditCardDiv.innerHTML = `
-                    <label class="text-gray-700 dark:text-gray-300 font-medium">Credit Card ${cardCount}:</label>
-                    <div class="col-span-2 flex gap-2">
-                        <select class="border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white w-1/3">
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="text-gray-700 dark:text-gray-300 font-medium">Credit Card ${cardCount}:</label>
+                        <button class="settle-card-btn bg-primary text-white px-4 py-1 rounded hover:bg-opacity-80">Settle</button>
+                    </div>
+                    <div class="grid grid-cols-4 gap-2">
+                        <select class="card-bank-select border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white col-span-1">
                             <option value="ADCB">ADCB</option>
                             <option value="ENBD">ENBD</option>
                             <option value="EIB">EIB</option>
@@ -1607,10 +1781,8 @@
                             <option value="DIB">DIB</option>
                             <option value="OTHER">OTHER</option>
                         </select>
-                        <div class="flex flex-col w-2/3 space-y-1">
-                            <input type="number" placeholder="Credit Limit" class="credit-card-amount border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white">
-                            <input type="number" placeholder="Outstanding" class="credit-card-outstanding border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white">
-                        </div>
+                        <input type="number" placeholder="Credit Limit" class="credit-card-amount border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white col-span-1">
+                        <input type="number" placeholder="Outstanding" class="credit-card-outstanding border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white col-span-2">
                     </div>
                 `;
                 creditCardsContainer.appendChild(creditCardDiv);
@@ -1630,7 +1802,16 @@
             removeCreditCardBtn.addEventListener('click', function() {
                 if (cardCount > 1) {
                     const creditCardEntries = document.querySelectorAll('.credit-card-entry');
-                    creditCardEntries[creditCardEntries.length - 1].remove();
+                    const lastEntry = creditCardEntries[creditCardEntries.length - 1];
+                    const lastEntryIndex = Array.from(document.querySelectorAll('.credit-card-entry')).indexOf(lastEntry);
+                    
+                    // Remove from settled cards if it was settled
+                    if (settledCards.has(lastEntryIndex)) {
+                        settledCards.delete(lastEntryIndex);
+                    }
+                    
+                    // Remove the element
+                    lastEntry.remove();
                     cardCount--;
                     
                     if (cardCount === 1) {
@@ -1760,9 +1941,10 @@
             // Show EMI Chart button
             showEmiChartBtn.addEventListener('click', displayEMIChart);
             
-            // Loan Comparison button
+            // Loan Comparison button - show modal instead of section
             loanComparisonBtn.addEventListener('click', function() {
-                loanComparisonSection.classList.remove('hidden');
+                // Show the modal
+                loanComparisonModal.classList.remove('hidden');
                 
                 // Pre-fill Bank 1 with current values
                 bank1NameInput.value = "ADCB";
@@ -1772,9 +1954,18 @@
                 
                 // Update comparison
                 updateBankComparison();
-                
-                // Scroll to comparison section
-                loanComparisonSection.scrollIntoView({ behavior: 'smooth' });
+            });
+            
+            // Close loan comparison modal
+            closeComparisonModalBtn.addEventListener('click', function() {
+                loanComparisonModal.classList.add('hidden');
+            });
+            
+            // Close modal if user clicks outside
+            loanComparisonModal.addEventListener('click', function(e) {
+                if (e.target === loanComparisonModal) {
+                    loanComparisonModal.classList.add('hidden');
+                }
             });
             
             // Reset button
@@ -1790,6 +1981,9 @@
                 reducingRateInput.value = '10';
                 specialNote.value = '';
                 
+                // Clear settled cards set
+                settledCards.clear();
+                
                 // Remove extra credit cards
                 const creditCardEntries = document.querySelectorAll('.credit-card-entry');
                 for (let i = 1; i < creditCardEntries.length; i++) {
@@ -1797,6 +1991,14 @@
                 }
                 cardCount = 1;
                 removeCreditCardBtn.disabled = true;
+                
+                // Remove "settled" class from first card
+                const firstCardEntry = document.querySelector('.credit-card-entry');
+                firstCardEntry.classList.remove('card-settled');
+                const firstSettleBtn = firstCardEntry.querySelector('.settle-card-btn');
+                firstSettleBtn.textContent = 'Settle';
+                firstSettleBtn.classList.remove('bg-red-500');
+                firstSettleBtn.classList.add('bg-primary');
                 
                 // Remove existing loans
                 existingLoansContainer.innerHTML = '';
@@ -1831,7 +2033,7 @@
                 
                 // Hide sections
                 emiChartSection.classList.add('hidden');
-                loanComparisonSection.classList.add('hidden');
+                loanComparisonModal.classList.add('hidden');
                 
                 // Remove any warning flashes
                 dbrCalculatorSection.classList.remove('dbr-warning-flash');
@@ -1867,18 +2069,6 @@
             updateGrossSalary();
             updateDBRCalculator();
             updateEMICalculator();
-            
-            // Test with example values (can be removed in production)
-            function testWithExample() {
-                loanTypeSelect.value = 'takeover-60-90';
-                tenureMonthsInput.value = '48';
-                loanAmountInput.value = '100000';
-                reducingRateInput.value = '10.5';
-                updateEMICalculator();
-            }
-            
-            // Uncomment below to test example
-            // testWithExample();
         });
     </script>
 </body>
