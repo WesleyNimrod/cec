@@ -78,6 +78,18 @@
             border: 1px dashed #6b7280 !important;
         }
         
+        /* Loan settled style */
+        .loan-settled {
+            opacity: 0.6;
+            background-color: #f3f4f6 !important;
+            border: 1px dashed #9ca3af !important;
+        }
+        
+        .dark .loan-settled {
+            background-color: #374151 !important;
+            border: 1px dashed #6b7280 !important;
+        }
+        
         /* Modal styles */
         .modal {
             position: fixed;
@@ -640,8 +652,9 @@
             let addbackCount = 1;
             let addbackData = {};
             
-            // Track settled credit cards
+            // Track settled credit cards and loans
             let settledCards = new Set();
+            let settledLoans = new Set();
             
             // Existing Loans functionality
             addExistingLoanBtn.addEventListener('click', function() {
@@ -655,7 +668,7 @@
                 loanDiv.classList.add('grid', 'grid-cols-3', 'gap-4', 'items-center', 'existing-loan-entry');
                 
                 loanDiv.innerHTML = `
-                    <div>
+                    <div class="flex justify-between items-center">
                         <select class="loan-type border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white w-full">
                             <option value="Personal Loan">Personal Loan</option>
                             <option value="Auto Loan">Auto Loan</option>
@@ -664,8 +677,9 @@
                     </div>
                     <div class="col-span-2 flex">
                         <input type="number" placeholder="Installment" class="loan-installment border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white w-1/2 mr-1">
-                        <input type="number" placeholder="Outstanding" class="loan-outstanding border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white w-1/2">
-                        <button class="remove-loan ml-2 bg-primary text-white p-2 rounded-md hover:bg-opacity-80">×</button>
+                        <input type="number" placeholder="Outstanding" class="loan-outstanding border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white w-1/2 mr-1">
+                        <button class="settle-loan-btn ml-1 bg-primary text-white px-3 py-1 rounded hover:bg-opacity-80 text-sm">Settle</button>
+                        <button class="remove-loan ml-1 bg-primary text-white p-2 rounded-md hover:bg-opacity-80">×</button>
                     </div>
                 `;
                 
@@ -678,14 +692,51 @@
                 const newLoanOutstanding = loanDiv.querySelector('.loan-outstanding');
                 newLoanOutstanding.addEventListener('input', updateDBRCalculator);
                 
+                // Add event listener to settle loan button
+                const settleLoanBtn = loanDiv.querySelector('.settle-loan-btn');
+                settleLoanBtn.addEventListener('click', function() {
+                    const loanEntry = this.closest('.existing-loan-entry');
+                    const loanIndex = Array.from(document.querySelectorAll('.existing-loan-entry')).indexOf(loanEntry);
+                    
+                    // Toggle settled state
+                    if (settledLoans.has(loanIndex)) {
+                        settledLoans.delete(loanIndex);
+                        loanEntry.classList.remove('loan-settled');
+                        this.textContent = 'Settle';
+                        this.classList.remove('bg-red-500');
+                        this.classList.add('bg-primary');
+                    } else {
+                        settledLoans.add(loanIndex);
+                        loanEntry.classList.add('loan-settled');
+                        this.textContent = 'Unsettle';
+                        this.classList.remove('bg-primary');
+                        this.classList.add('bg-red-500');
+                    }
+                    
+                    // Update calculations
+                    updateDBRCalculator();
+                });
+                
                 // Add event listener to remove button
                 const removeBtn = loanDiv.querySelector('.remove-loan');
                 removeBtn.addEventListener('click', function() {
-                    loanDiv.remove();
+                    const loanEntry = this.closest('.existing-loan-entry');
+                    const loanIndex = Array.from(document.querySelectorAll('.existing-loan-entry')).indexOf(loanEntry);
+                    
+                    // Remove from settled loans if it was settled
+                    if (settledLoans.has(loanIndex)) {
+                        settledLoans.delete(loanIndex);
+                    }
+                    
+                    // Remove the element
+                    loanEntry.remove();
                     existingLoanCount--;
+                    
                     if (existingLoanCount === 0) {
                         existingLoansContainer.classList.add('hidden');
                     }
+                    
+                    // Recalculate
                     updateDBRCalculator();
                 });
             }
@@ -983,10 +1034,13 @@
             function updateDBRCalculator() {
                 const grossSalary = parseFloat(grossSalaryInput.value.replace(/,/g, '')) || 0;
                 
-                // Get existing loans installments
+                // Get existing loans installments (only include non-settled loans)
                 let totalExistingLoansInstallments = 0;
-                document.querySelectorAll('.loan-installment').forEach(input => {
-                    totalExistingLoansInstallments += parseFloat(input.value) || 0;
+                document.querySelectorAll('.existing-loan-entry').forEach((entry, index) => {
+                    if (!settledLoans.has(index)) {
+                        const installmentInput = entry.querySelector('.loan-installment');
+                        totalExistingLoansInstallments += parseFloat(installmentInput.value) || 0;
+                    }
                 });
                 
                 // Get existing loans outstanding (not counted in DBR)
@@ -1102,10 +1156,13 @@
                 
                 // Calculate total liabilities without EMI
                 
-                // Get existing loans installments
+                // Get existing loans installments (only for non-settled loans)
                 let totalExistingLoansInstallments = 0;
-                document.querySelectorAll('.loan-installment').forEach(input => {
-                    totalExistingLoansInstallments += parseFloat(input.value) || 0;
+                document.querySelectorAll('.existing-loan-entry').forEach((entry, index) => {
+                    if (!settledLoans.has(index)) {
+                        const installmentInput = entry.querySelector('.loan-installment');
+                        totalExistingLoansInstallments += parseFloat(installmentInput.value) || 0;
+                    }
                 });
                 
                 // Calculate credit card DBR
@@ -1406,10 +1463,13 @@
                 const loanType = loanTypeSelect.value;
                 const allowedLiability = grossSalary * 0.4999; // 49.99% of gross salary
                 
-                // Get existing loans installments
+                // Get existing loans installments (only for non-settled loans)
                 let totalExistingLoansInstallments = 0;
-                document.querySelectorAll('.loan-installment').forEach(input => {
-                    totalExistingLoansInstallments += parseFloat(input.value) || 0;
+                document.querySelectorAll('.existing-loan-entry').forEach((entry, index) => {
+                    if (!settledLoans.has(index)) {
+                        const installmentInput = entry.querySelector('.loan-installment');
+                        totalExistingLoansInstallments += parseFloat(installmentInput.value) || 0;
+                    }
                 });
                 
                 // Calculate credit card DBR
@@ -1612,7 +1672,8 @@
                         #findOptimalLoanBtn,
                         #resetBtn,
                         #addExistingLoanBtn,
-                        .settle-card-btn {
+                        .settle-card-btn,
+                        .settle-loan-btn {
                             display: none !important;
                         }
                         
@@ -1677,7 +1738,7 @@
                 const calculatorsContainer = document.querySelector('.grid.grid-cols-1.md\\:grid-cols-2.gap-6');
                 
                 // Hide elements we don't want in the PDF
-                const settleButtons = document.querySelectorAll('.settle-card-btn');
+                const settleButtons = document.querySelectorAll('.settle-card-btn, .settle-loan-btn');
                 settleButtons.forEach(btn => btn.style.display = 'none');
                 
                 // Create a temporary div to hold page 1 content
@@ -1981,8 +2042,9 @@
                 reducingRateInput.value = '10';
                 specialNote.value = '';
                 
-                // Clear settled cards set
+                // Clear settled cards and loans set
                 settledCards.clear();
+                settledLoans.clear();
                 
                 // Remove extra credit cards
                 const creditCardEntries = document.querySelectorAll('.credit-card-entry');
