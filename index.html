@@ -11,8 +11,8 @@
             theme: {
                 extend: {
                     colors: {
-                        primary: '#5D5CDE',
-                        secondary: '#4949c9',
+                        primary: '#2D336B',
+                        secondary: '#262a5a',
                         lightblue: '#caf0f8',
                         lightgreen: '#d8f3dc',
                         lightyellow: '#ffedd8',
@@ -158,11 +158,29 @@
         }
         
         input:checked + .toggle-slider {
-            background-color: #5D5CDE;
+            background-color: #2D336B !important;
         }
         
         input:checked + .toggle-slider:before {
             transform: translateX(26px);
+        }
+        
+        .btn-icon {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            transition: all 0.2s;
+            width: 60px;
+            height: 60px;
+        }
+        
+        .btn-icon i {
+            font-size: 1.5rem;
+            margin-bottom: 0.25rem;
         }
     </style>
 </head>
@@ -180,24 +198,50 @@
     <div class="container mx-auto px-4 py-4 max-w-6xl" id="printableArea">
         <h1 class="text-3xl font-bold text-center text-primary dark:text-white mb-8">Customer Eligibility Check</h1>
                 
-        <!-- WhatsApp & Print Integration -->
-        <div class="mb-8 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border-l-4 border-primary">
-            <h2 class="text-2xl font-bold text-primary dark:text-white mb-6">SHARE DETAILS</h2>
+        <!-- Menu Section (Formerly Share Details) -->
+        <div class="mb-6 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md border-l-4 border-primary">
+            <h2 class="text-2xl font-bold text-primary dark:text-white mb-4">MENU</h2>
             
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center mb-4">
-                <label class="text-gray-700 dark:text-gray-300 font-medium">WhatsApp Number:</label>
-                <input type="tel" id="whatsappNumber" placeholder="Enter WhatsApp number" class="md:col-span-2 border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white">
+            <!-- WhatsApp Input and Button Group -->
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center w-full md:w-1/2 mr-2">
+                    <input type="tel" id="whatsappNumber" placeholder="Enter WhatsApp number" class="border rounded-l-md p-2 text-base dark:bg-gray-800 dark:text-white flex-grow">
+                    <button id="sendWhatsAppBtn" class="bg-green-600 text-white px-3 py-2 rounded-r-md hover:bg-opacity-80">
+                        <i class="fab fa-whatsapp"></i>
+                    </button>
+                </div>
             </div>
             
-            <div class="flex flex-wrap justify-center gap-4">
-                <a href="https://script.google.com/macros/s/AKfycbyt6zvvO5POe2jMnyaR2bJOPu09L2f2Rr3Aeh72_APIR1C-6JVzSDOZvGfi4ZOZbQL0/exec" class="bg-red-500 text-white p-3 rounded-md hover:bg-opacity-80 text-base">Tracker</a>
-                <a href="advcalc.html" class="bg-orange-500 text-white p-3 rounded-md hover:bg-opacity-80 text-base">Advanced Calculator</a>
-                <button id="showEmiChartBtn" class="bg-yellow-400 text-white p-3 rounded-md hover:bg-opacity-80 text-base">EMI Chart</button>
-                <button id="printBtn" class="bg-blue-500 text-white p-3 rounded-md hover:bg-opacity-80 text-base">Print Page</button>
-                <button id="exportPdfBtn" class="bg-blue-800 text-white p-3 rounded-md hover:bg-opacity-80 text-base">Export PDF</button>
-                <button id="loanComparisonBtn" class="bg-purple-800 text-white p-3 rounded-md hover:bg-opacity-80 text-base">Compare Loans</button>
-                <button id="sendWhatsAppBtn" class="bg-green-600 text-white p-3 rounded-md hover:bg-opacity-80 text-base">Share WhatsApp</button>
-                <a href="rategrid.html" class="bg-teal-700 text-white p-3 rounded-md hover:bg-opacity-80 text-base">Rate Grid</a>
+            <!-- Icon Buttons Grid -->
+            <div class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
+                <a href="https://script.google.com/macros/s/AKfycbyt6zvvO5POe2jMnyaR2bJOPu09L2f2Rr3Aeh72_APIR1C-6JVzSDOZvGfi4ZOZbQL0/exec" class="btn-icon bg-red-500 text-white hover:bg-opacity-80">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Tracker</span>
+                </a>
+                <button id="advCalcBtn" class="btn-icon bg-orange-500 text-white hover:bg-opacity-80">
+                    <i class="fas fa-calculator"></i>
+                    <span>Advanced</span>
+                </button>
+                <button id="showEmiChartBtn" class="btn-icon bg-yellow-400 text-white hover:bg-opacity-80">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>EMI Chart</span>
+                </button>
+                <button id="printBtn" class="btn-icon bg-blue-500 text-white hover:bg-opacity-80">
+                    <i class="fas fa-print"></i>
+                    <span>Print</span>
+                </button>
+                <button id="exportPdfBtn" class="btn-icon bg-blue-800 text-white hover:bg-opacity-80">
+                    <i class="fas fa-file-pdf"></i>
+                    <span>PDF</span>
+                </button>
+                <button id="loanComparisonBtn" class="btn-icon bg-purple-800 text-white hover:bg-opacity-80">
+                    <i class="fas fa-balance-scale"></i>
+                    <span>Compare</span>
+                </button>
+                <button id="rateGridBtn" class="btn-icon bg-teal-700 text-white hover:bg-opacity-80">
+                    <i class="fas fa-table"></i>
+                    <span>Rate Grid</span>
+                </button>
             </div>
         </div>
         
@@ -208,15 +252,15 @@
             <div id="dbrCalculator" class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border-l-4 border-primary">
                 <h2 class="text-2xl font-bold text-primary dark:text-white mb-6">DBR CALCULATOR</h2>
                 
-                <div class="space-y-4">
-                    <div class="grid grid-cols-3 gap-4 items-center">
+                <div class="space-y-3">
+                    <div class="grid grid-cols-3 gap-3 items-center">
                         <label class="text-gray-700 dark:text-gray-300 font-medium">Salary (AED):</label>
                         <input type="number" id="salary" class="col-span-2 border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white">
                     </div>
                     
                     <!-- Add-back section -->
                     <div id="addbacks-container">
-                        <div class="grid grid-cols-3 gap-4 items-center addback-entry">
+                        <div class="grid grid-cols-3 gap-3 items-center addback-entry">
                             <label class="text-gray-700 dark:text-gray-300 font-medium">Add-back:</label>
                             <div class="col-span-2">
                                 <select class="addback-type border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white w-full">
@@ -234,22 +278,22 @@
                     
                     <div class="dynamic-addback-fields"></div>
                     
-                    <div class="flex justify-start gap-2 mb-4">
+                    <div class="flex justify-start gap-2 mb-3">
                         <button id="addMoreAddbackBtn" class="bg-primary text-white p-2 rounded-md hover:bg-opacity-80">+ Add More</button>
                         <button id="removeAddbackBtn" class="bg-primary text-white p-2 rounded-md hover:bg-opacity-80 disabled:opacity-50" disabled>- Remove</button>
                     </div>
                     
-                    <div class="grid grid-cols-3 gap-4 items-center">
+                    <div class="grid grid-cols-3 gap-3 items-center">
                         <label class="text-gray-700 dark:text-gray-300 font-medium">Gross Salary:</label>
                         <input type="text" id="grossSalary" class="col-span-2 border rounded-md p-2 bg-lightgray dark:bg-gray-700 dark:text-white" readonly>
                     </div>
                     
-                    <div class="grid grid-cols-3 gap-4 items-center">
+                    <div class="grid grid-cols-3 gap-3 items-center">
                         <label class="text-gray-700 dark:text-gray-300 font-medium">Allowed Liability:</label>
                         <input type="text" id="allowedLiability" class="col-span-2 border rounded-md p-2 bg-lightgray dark:bg-gray-700 dark:text-white" readonly>
                     </div>
                     
-                    <div class="grid grid-cols-3 gap-4 items-center">
+                    <div class="grid grid-cols-3 gap-3 items-center">
                         <label class="text-gray-700 dark:text-gray-300 font-medium">DBR %:</label>
                         <div class="col-span-2 flex items-center">
                             <input type="text" id="dbrPercentage" class="border rounded-md p-2 bg-lightgray dark:bg-gray-700 dark:text-white" readonly>
@@ -264,7 +308,7 @@
 
                     <!-- Credit Cards Section -->
                     <div id="creditCardsContainer">
-                        <div class="credit-card-entry mb-4">
+                        <div class="credit-card-entry mb-3">
                             <div class="flex justify-between items-center mb-2">
                                 <label class="text-gray-700 dark:text-gray-300 font-medium">Credit Card 1:</label>
                                 <button class="settle-card-btn bg-primary text-white px-4 py-1 rounded hover:bg-opacity-80">Settle</button>
@@ -294,37 +338,37 @@
                         <button id="removeCreditCardBtn" class="bg-primary text-white p-2 rounded-md hover:bg-opacity-80 disabled:opacity-50" disabled>- Remove Card</button>
                     </div>
                     
-                    <div class="grid grid-cols-3 gap-4 items-center">
+                    <div class="grid grid-cols-3 gap-3 items-center">
                         <label class="text-gray-700 dark:text-gray-300 font-medium">Total CC Limit:</label>
                         <input type="text" id="totalCCLimit" class="col-span-2 border rounded-md p-2 bg-lightgray dark:bg-gray-700 dark:text-white" readonly>
                     </div>
                     
-                    <div class="grid grid-cols-3 gap-4 items-center">
+                    <div class="grid grid-cols-3 gap-3 items-center">
                         <label class="text-gray-700 dark:text-gray-300 font-medium">DBR Of Credit Card:</label>
                         <input type="text" id="dbrCC" class="col-span-2 border rounded-md p-2 bg-lightgray dark:bg-gray-700 dark:text-white" readonly>
                     </div>
                     
-                    <div class="grid grid-cols-3 gap-4 items-center">
+                    <div class="grid grid-cols-3 gap-3 items-center">
                         <label class="text-gray-700 dark:text-gray-300 font-medium">Total Liabilities:</label>
                         <input type="text" id="totalLiabilities" class="col-span-2 border rounded-md p-2 bg-lightgray dark:bg-gray-700 dark:text-white" readonly>
                     </div>
                     
-                    <div class="grid grid-cols-3 gap-4 items-center">
+                    <div class="grid grid-cols-3 gap-3 items-center">
                         <label class="text-gray-700 dark:text-gray-300 font-medium">Available Liability:</label>
                         <input type="text" id="availableLiability" class="col-span-2 border rounded-md p-2 bg-lightgray dark:bg-gray-700 dark:text-white" readonly>
                     </div>
                     
-                    <div class="grid grid-cols-3 gap-4 items-center">
+                    <div class="grid grid-cols-3 gap-3 items-center">
                         <label class="text-gray-700 dark:text-gray-300 font-medium">New Total Liabilities:</label>
                         <input type="text" id="newTotalLiabilities" class="col-span-2 border rounded-md p-2 bg-lightgray dark:bg-gray-700 dark:text-white" readonly>
                     </div>
                     
-                    <div class="grid grid-cols-3 gap-4 items-center">
+                    <div class="grid grid-cols-3 gap-3 items-center">
                         <label class="text-gray-700 dark:text-gray-300 font-medium">Special Note:</label>
                         <textarea id="specialNote" class="col-span-2 w-full border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white" rows="3"></textarea>
                     </div>
                     
-                    <div id="ccSuggestionContainer" class="border border-primary p-3 rounded-lg mt-4 hidden">
+                    <div id="ccSuggestionContainer" class="border border-primary p-3 rounded-lg mt-3 hidden">
                         <h3 class="text-lg font-bold text-primary mb-2">CREDIT CARD SUGGESTION</h3>
                         <p id="ccSuggestionText" class="text-gray-700 dark:text-gray-300"></p>
                     </div>
@@ -335,8 +379,29 @@
             <div id="emiCalculator" class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border-l-4 border-primary">
                 <h2 class="text-2xl font-bold text-primary dark:text-white mb-6">EMI CALCULATOR</h2>
                 
-                <div class="space-y-4">
-                    <div class="grid grid-cols-3 gap-4 items-center">
+                <div class="space-y-3">
+                    <!-- Customer Profile Management -->
+                    <div class="grid grid-cols-3 gap-3 items-center">
+                        <label class="text-gray-700 dark:text-gray-300 font-medium">Customer Name:</label>
+                        <input type="text" id="customerName" placeholder="Enter customer name" class="col-span-2 border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white">
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-3 items-center">
+                        <label class="text-gray-700 dark:text-gray-300 font-medium">Saved Profiles:</label>
+                        <select id="savedProfiles" class="border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white">
+                            <option value="">Select a profile</option>
+                        </select>
+                        <div class="flex gap-1">
+                            <button id="retrieveProfileBtn" class="bg-primary text-white p-2 rounded-md hover:bg-opacity-80 flex items-center justify-center">
+                                <i class="fas fa-download mr-1"></i>
+                            </button>
+                            <button id="deleteProfileBtn" class="bg-red-500 text-white p-2 rounded-md hover:bg-opacity-80 flex items-center justify-center">
+                                <i class="fas fa-trash-alt mr-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-3 items-center">
                         <label class="text-gray-700 dark:text-gray-300 font-medium">Loan Type:</label>
                         <select id="loanType" class="col-span-2 border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white">
                             <option value="fresh-0-30">Fresh (0-30 days)</option>
@@ -347,38 +412,38 @@
                         </select>
                     </div>
                     
-                    <div class="grid grid-cols-3 gap-4 items-center">
+                    <div class="grid grid-cols-3 gap-3 items-center">
                         <label class="text-gray-700 dark:text-gray-300 font-medium">Disbursal Date:</label>
                         <input type="date" id="disbursalDate" class="col-span-2 border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white">
                     </div>
                     
-                    <div class="grid grid-cols-3 gap-4 items-center">
+                    <div class="grid grid-cols-3 gap-3 items-center">
                         <label class="text-gray-700 dark:text-gray-300 font-medium">First Payment Date:</label>
                         <input type="date" id="firstPaymentDate" class="col-span-2 border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white">
                         <p id="dateError" class="col-span-3 text-red-600 dark:text-red-400 text-sm hidden">Error: Invalid Payment Date</p>
                     </div>
                     
-                    <div class="grid grid-cols-3 gap-4 items-center">
+                    <div class="grid grid-cols-3 gap-3 items-center">
                         <label class="text-gray-700 dark:text-gray-300 font-medium">Days Between:</label>
                         <input type="text" id="daysBetween" class="col-span-2 border rounded-md p-2 bg-lightgray dark:bg-gray-700 dark:text-white" readonly>
                     </div>
                     
-                    <div class="grid grid-cols-3 gap-4 items-center">
+                    <div class="grid grid-cols-3 gap-3 items-center">
                         <label class="text-gray-700 dark:text-gray-300 font-medium">Multiples Of Salary:</label>
                         <input type="number" id="multiplesOfSalary" class="col-span-2 border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white" value="15">
                     </div>
                     
-                    <div class="grid grid-cols-3 gap-4 items-center">
+                    <div class="grid grid-cols-3 gap-3 items-center">
                         <label class="text-gray-700 dark:text-gray-300 font-medium">Max Loan Eligibility (AED):</label>
                         <input type="text" id="maxLoanEligibility" class="col-span-2 border rounded-md p-2 bg-lightgray dark:bg-gray-700 dark:text-white" readonly>
                     </div>
                     
-                    <div class="grid grid-cols-3 gap-4 items-center">
+                    <div class="grid grid-cols-3 gap-3 items-center">
                         <label class="text-gray-700 dark:text-gray-300 font-medium">Tenure:</label>
                         <input type="number" id="tenureMonths" class="col-span-2 border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white" value="48" min="1" max="300">
                     </div>
                     
-                    <div class="grid grid-cols-3 gap-4 items-center">
+                    <div class="grid grid-cols-3 gap-3 items-center">
                         <label class="text-gray-700 dark:text-gray-300 font-medium">Loan Amount (AED):</label>
                         <div class="col-span-2">
                             <input type="number" id="loanAmount" class="w-full border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white">
@@ -386,49 +451,56 @@
                         </div>
                     </div>
                     
-                    <div class="grid grid-cols-3 gap-4 items-center">
+                    <div class="grid grid-cols-3 gap-3 items-center">
                         <label class="text-gray-700 dark:text-gray-300 font-medium">Reducing Rate %:</label>
                         <input type="number" id="reducingRate" step="0.01" class="col-span-2 border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white" value="10">
                     </div>
                     
-                    <div class="grid grid-cols-3 gap-4 items-center">
+                    <div class="grid grid-cols-3 gap-3 items-center">
                         <label class="text-gray-700 dark:text-gray-300 font-medium">Flat Rate %:</label>
                         <input type="text" id="flatRate" step="0.01" class="col-span-2 border rounded-md p-2 bg-lightgray dark:bg-gray-700 dark:text-white" readonly>
                     </div>
                     
-                    <div class="grid grid-cols-3 gap-4 items-center">
+                    <div class="grid grid-cols-3 gap-3 items-center">
                         <label class="text-gray-700 dark:text-gray-300 font-medium">EMI (AED):</label>
                         <input type="text" id="emi" step="0.01" class="col-span-2 border rounded-md p-2 bg-lightgray dark:bg-gray-700 dark:text-white" readonly>
                     </div>
                     
-                    <div class="grid grid-cols-3 gap-4 items-center">
+                    <div class="grid grid-cols-3 gap-3 items-center">
                         <label class="text-gray-700 dark:text-gray-300 font-medium">Total Payment (AED):</label>
                         <input type="text" id="totalPayment" step="0.01" class="col-span-2 border rounded-md p-2 bg-lightgray dark:bg-gray-700 dark:text-white" readonly>
                     </div>
                     
-                    <div class="grid grid-cols-3 gap-4 items-center">
+                    <div class="grid grid-cols-3 gap-3 items-center">
                         <label class="text-gray-700 dark:text-gray-300 font-medium">Total Interest (AED):</label>
                         <input type="text" id="totalInterest" step="0.01" class="col-span-2 border rounded-md p-2 bg-lightgray dark:bg-gray-700 dark:text-white" readonly>
                     </div>
                     
-                    <div class="grid grid-cols-3 gap-4 items-center">
+                    <div class="grid grid-cols-3 gap-3 items-center">
                         <label class="text-gray-700 dark:text-gray-300 font-medium">Processing Fees + VAT (AED):</label>
                         <input type="text" id="processingFees" step="0.01" class="col-span-2 border rounded-md p-2 bg-lightgray dark:bg-gray-700 dark:text-white" readonly>
                     </div>
                     
-                    <div class="grid grid-cols-3 gap-4 items-center">
+                    <div class="grid grid-cols-3 gap-3 items-center">
                         <label class="text-gray-700 dark:text-gray-300 font-medium">Total Outstanding:</label>
                         <input type="text" id="totalOutstanding" class="col-span-2 border rounded-md p-2 bg-lightgray dark:bg-gray-700 dark:text-white" readonly>
                     </div>
                     
-                    <div class="grid grid-cols-3 gap-4 items-center">
+                    <div class="grid grid-cols-3 gap-3 items-center">
                         <label class="text-gray-700 dark:text-gray-300 font-medium">Cash In Hand - NetPay (AED):</label>
                         <input type="text" id="cashInHand" step="0.01" class="col-span-2 border rounded-md p-2 bg-lightgray dark:bg-gray-700 dark:text-white" readonly>
                     </div>
                     
-                    <div class="grid grid-cols-2 gap-4 mt-6">
-                        <button id="findOptimalLoanBtn" class="bg-primary text-white p-3 rounded-md hover:bg-opacity-80 text-base">Find Optimal Loan Amount</button>
-                        <button id="resetBtn" class="bg-primary text-white p-3 rounded-md hover:bg-opacity-80 text-base">Reset</button>
+                    <div class="grid grid-cols-3 gap-3 mt-4">
+                        <button id="findOptimalLoanBtn" class="bg-primary text-white p-3 rounded-md hover:bg-opacity-80 text-base">
+                            <i class="fas fa-search-dollar mr-1"></i> Optimal
+                        </button>
+                        <button id="resetBtn" class="bg-primary text-white p-3 rounded-md hover:bg-opacity-80 text-base">
+                            <i class="fas fa-redo-alt mr-1"></i> Reset
+                        </button>
+                        <button id="saveProfileBtn" class="bg-primary text-white p-3 rounded-md hover:bg-opacity-80 text-base">
+                            <i class="fas fa-save mr-1"></i> Save
+                        </button>
                     </div>
                 </div>
             </div>
@@ -469,66 +541,66 @@
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <!-- First Bank -->
-                <div class="space-y-4">
-                    <div class="grid grid-cols-3 gap-4 items-center">
+                <div class="space-y-3">
+                    <div class="grid grid-cols-3 gap-3 items-center">
                         <label class="text-gray-700 dark:text-gray-300 font-medium">Bank Name:</label>
                         <input type="text" id="bank1Name" class="col-span-2 border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white">
                     </div>
                     
-                    <div class="grid grid-cols-3 gap-4 items-center">
+                    <div class="grid grid-cols-3 gap-3 items-center">
                         <label class="text-gray-700 dark:text-gray-300 font-medium">Loan Amount (AED):</label>
                         <input type="number" id="bank1LoanAmount" class="col-span-2 border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white">
                     </div>
                     
-                    <div class="grid grid-cols-3 gap-4 items-center">
+                    <div class="grid grid-cols-3 gap-3 items-center">
                         <label class="text-gray-700 dark:text-gray-300 font-medium">Tenure (Months):</label>
                         <input type="number" id="bank1Tenure" class="col-span-2 border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white">
                     </div>
                     
-                    <div class="grid grid-cols-3 gap-4 items-center">
+                    <div class="grid grid-cols-3 gap-3 items-center">
                         <label class="text-gray-700 dark:text-gray-300 font-medium">Reducing Rate (%):</label>
                         <input type="number" id="bank1Rate" step="0.01" class="col-span-2 border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white">
                     </div>
                     
-                    <div class="grid grid-cols-3 gap-4 items-center">
+                    <div class="grid grid-cols-3 gap-3 items-center">
                         <label class="text-gray-700 dark:text-gray-300 font-medium">EMI (AED):</label>
                         <input type="text" id="bank1EMI" step="0.01" class="col-span-2 border rounded-md p-2 bg-lightgray dark:bg-gray-700 dark:text-white" readonly>
                     </div>
                     
-                    <div class="grid grid-cols-3 gap-4 items-center">
+                    <div class="grid grid-cols-3 gap-3 items-center">
                         <label class="text-gray-700 dark:text-gray-300 font-medium">Total Interest (AED):</label>
                         <input type="text" id="bank1TotalInterest" step="0.01" class="col-span-2 border rounded-md p-2 bg-lightgray dark:bg-gray-700 dark:text-white" readonly>
                     </div>
                 </div>
                 
                 <!-- Second Bank -->
-                <div class="space-y-4">
-                    <div class="grid grid-cols-3 gap-4 items-center">
+                <div class="space-y-3">
+                    <div class="grid grid-cols-3 gap-3 items-center">
                         <label class="text-gray-700 dark:text-gray-300 font-medium">Bank Name:</label>
                         <input type="text" id="bank2Name" class="col-span-2 border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white">
                     </div>
                     
-                    <div class="grid grid-cols-3 gap-4 items-center">
+                    <div class="grid grid-cols-3 gap-3 items-center">
                         <label class="text-gray-700 dark:text-gray-300 font-medium">Loan Amount (AED):</label>
                         <input type="number" id="bank2LoanAmount" class="col-span-2 border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white">
                     </div>
                     
-                    <div class="grid grid-cols-3 gap-4 items-center">
+                    <div class="grid grid-cols-3 gap-3 items-center">
                         <label class="text-gray-700 dark:text-gray-300 font-medium">Tenure (Months):</label>
                         <input type="number" id="bank2Tenure" class="col-span-2 border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white">
                     </div>
                     
-                    <div class="grid grid-cols-3 gap-4 items-center">
+                    <div class="grid grid-cols-3 gap-3 items-center">
                         <label class="text-gray-700 dark:text-gray-300 font-medium">Reducing Rate (%):</label>
                         <input type="number" id="bank2Rate" step="0.01" class="col-span-2 border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white">
                     </div>
                     
-                    <div class="grid grid-cols-3 gap-4 items-center">
+                    <div class="grid grid-cols-3 gap-3 items-center">
                         <label class="text-gray-700 dark:text-gray-300 font-medium">EMI (AED):</label>
                         <input type="text" id="bank2EMI" step="0.01" class="col-span-2 border rounded-md p-2 bg-lightgray dark:bg-gray-700 dark:text-white" readonly>
                     </div>
                     
-                    <div class="grid grid-cols-3 gap-4 items-center">
+                    <div class="grid grid-cols-3 gap-3 items-center">
                         <label class="text-gray-700 dark:text-gray-300 font-medium">Total Interest (AED):</label>
                         <input type="text" id="bank2TotalInterest" step="0.01" class="col-span-2 border rounded-md p-2 bg-lightgray dark:bg-gray-700 dark:text-white" readonly>
                     </div>
@@ -542,6 +614,30 @@
         </div>
     </div>
     
+    <!-- Advanced Calculator Modal -->
+    <div id="advCalcModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-primary dark:text-white">ADVANCED CALCULATOR</h2>
+                <button id="closeAdvCalcModal" class="text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-400 text-2xl">&times;</button>
+            </div>
+            
+            <iframe id="advCalcFrame" src="advcalc.html" class="w-full h-[80vh] border-0"></iframe>
+        </div>
+    </div>
+    
+    <!-- Rate Grid Modal -->
+    <div id="rateGridModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-primary dark:text-white">RATE GRID</h2>
+                <button id="closeRateGridModal" class="text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-400 text-2xl">&times;</button>
+            </div>
+            
+            <iframe id="rateGridFrame" src="rategrid.html" class="w-full h-[80vh] border-0"></iframe>
+        </div>
+    </div>
+    
     <script>
         // Theme toggle functionality
         const themeToggle = document.getElementById('themeToggle');
@@ -552,6 +648,23 @@
                 document.documentElement.classList.add('dark');
             } else {
                 document.documentElement.classList.remove('dark');
+            }
+        });
+        
+        // Check for system dark mode preference
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+            themeToggle.checked = true;
+        }
+        
+        // Listen for changes in system dark mode preference
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+                themeToggle.checked = true;
+            } else {
+                document.documentElement.classList.remove('dark');
+                themeToggle.checked = false;
             }
         });
         
@@ -575,6 +688,11 @@
             const totalCCLimitInput = document.getElementById('totalCCLimit');
             const dbrCCInput = document.getElementById('dbrCC');
             const totalOutstandingInput = document.getElementById('totalOutstanding');
+            const customerNameInput = document.getElementById('customerName');
+            const savedProfilesSelect = document.getElementById('savedProfiles');
+            const retrieveProfileBtn = document.getElementById('retrieveProfileBtn');
+            const deleteProfileBtn = document.getElementById('deleteProfileBtn');
+            const saveProfileBtn = document.getElementById('saveProfileBtn');
             const loanTypeSelect = document.getElementById('loanType');
             const multiplesOfSalaryInput = document.getElementById('multiplesOfSalary');
             const maxLoanEligibilityInput = document.getElementById('maxLoanEligibility');
@@ -615,6 +733,12 @@
             const closeComparisonModalBtn = document.getElementById('closeComparisonModal');
             const dbrCalculatorSection = document.getElementById('dbrCalculator');
             const emiCalculatorSection = document.getElementById('emiCalculator');
+            const advCalcBtn = document.getElementById('advCalcBtn');
+            const advCalcModal = document.getElementById('advCalcModal');
+            const closeAdvCalcModal = document.getElementById('closeAdvCalcModal');
+            const rateGridBtn = document.getElementById('rateGridBtn');
+            const rateGridModal = document.getElementById('rateGridModal');
+            const closeRateGridModal = document.getElementById('closeRateGridModal');
             
             // Bank comparison inputs
             const bank1NameInput = document.getElementById('bank1Name');
@@ -656,6 +780,278 @@
             let settledCards = new Set();
             let settledLoans = new Set();
             
+            // Profile management
+            loadSavedProfiles();
+            
+            // Modal event listeners
+            advCalcBtn.addEventListener('click', function() {
+                advCalcModal.classList.remove('hidden');
+            });
+            
+            closeAdvCalcModal.addEventListener('click', function() {
+                advCalcModal.classList.add('hidden');
+            });
+            
+            rateGridBtn.addEventListener('click', function() {
+                rateGridModal.classList.remove('hidden');
+            });
+            
+            closeRateGridModal.addEventListener('click', function() {
+                rateGridModal.classList.add('hidden');
+            });
+            
+            // Close modal when clicking outside
+            advCalcModal.addEventListener('click', function(e) {
+                if (e.target === advCalcModal) {
+                    advCalcModal.classList.add('hidden');
+                }
+            });
+            
+            rateGridModal.addEventListener('click', function(e) {
+                if (e.target === rateGridModal) {
+                    rateGridModal.classList.add('hidden');
+                }
+            });
+            
+            // Save and retrieve profile functionality
+            saveProfileBtn.addEventListener('click', saveCustomerProfile);
+            retrieveProfileBtn.addEventListener('click', retrieveCustomerProfile);
+            deleteProfileBtn.addEventListener('click', deleteCustomerProfile);
+            
+            function saveCustomerProfile() {
+                const customerName = customerNameInput.value.trim();
+                if (!customerName) {
+                    alert('Please enter a customer name before saving');
+                    return;
+                }
+                
+                // Get all input values to save
+                const profileData = {
+                    customerName: customerName,
+                    salary: salaryInput.value,
+                    loanType: loanTypeSelect.value,
+                    disbursalDate: disbursalDateInput.value,
+                    firstPaymentDate: firstPaymentDateInput.value,
+                    multiplesOfSalary: multiplesOfSalaryInput.value,
+                    tenureMonths: tenureMonthsInput.value,
+                    loanAmount: loanAmountInput.value,
+                    reducingRate: reducingRateInput.value,
+                    specialNote: specialNote.value,
+                    // Add any other fields you want to save
+                    
+                    // Credit card data
+                    creditCards: Array.from(document.querySelectorAll('.credit-card-entry')).map((entry, index) => {
+                        return {
+                            bank: entry.querySelector('.card-bank-select').value,
+                            limit: entry.querySelector('.credit-card-amount').value,
+                            outstanding: entry.querySelector('.credit-card-outstanding').value,
+                            settled: settledCards.has(index)
+                        };
+                    }),
+                    
+                    // Existing loans data
+                    existingLoans: Array.from(document.querySelectorAll('.existing-loan-entry')).map((entry, index) => {
+                        return {
+                            type: entry.querySelector('.loan-type').value,
+                            installment: entry.querySelector('.loan-installment').value,
+                            outstanding: entry.querySelector('.loan-outstanding').value,
+                            settled: settledLoans.has(index)
+                        };
+                    }),
+                    
+                    // Add-back data
+                    addbackData: addbackData
+                };
+                
+                // Save to localStorage
+                try {
+                    // Get existing profiles
+                    const existingProfiles = JSON.parse(localStorage.getItem('customerProfiles')) || {};
+                    
+                    // Add/update this profile
+                    existingProfiles[customerName] = profileData;
+                    
+                    // Save back to localStorage
+                    localStorage.setItem('customerProfiles', JSON.stringify(existingProfiles));
+                    
+                    // Update dropdown
+                    loadSavedProfiles();
+                    
+                    alert('Profile saved successfully!');
+                } catch (error) {
+                    console.error('Error saving profile:', error);
+                    alert('Error saving profile. Please try again.');
+                }
+            }
+            
+            function loadSavedProfiles() {
+                // Clear existing options except the first one
+                while (savedProfilesSelect.options.length > 1) {
+                    savedProfilesSelect.options.remove(1);
+                }
+                
+                // Get profiles from localStorage
+                try {
+                    const profiles = JSON.parse(localStorage.getItem('customerProfiles')) || {};
+                    
+                    // Add options to select
+                    Object.keys(profiles).forEach(name => {
+                        const option = document.createElement('option');
+                        option.value = name;
+                        option.textContent = name;
+                        savedProfilesSelect.appendChild(option);
+                    });
+                } catch (error) {
+                    console.error('Error loading profiles:', error);
+                }
+            }
+            
+            function retrieveCustomerProfile() {
+                const selectedProfile = savedProfilesSelect.value;
+                if (!selectedProfile) {
+                    alert('Please select a profile to retrieve');
+                    return;
+                }
+                
+                try {
+                    const profiles = JSON.parse(localStorage.getItem('customerProfiles')) || {};
+                    const profileData = profiles[selectedProfile];
+                    
+                    if (!profileData) {
+                        alert('Profile not found');
+                        return;
+                    }
+                    
+                    // Reset form first
+                    resetBtn.click();
+                    
+                    // Fill in the data
+                    customerNameInput.value = profileData.customerName;
+                    salaryInput.value = profileData.salary;
+                    loanTypeSelect.value = profileData.loanType;
+                    disbursalDateInput.value = profileData.disbursalDate;
+                    firstPaymentDateInput.value = profileData.firstPaymentDate;
+                    multiplesOfSalaryInput.value = profileData.multiplesOfSalary;
+                    tenureMonthsInput.value = profileData.tenureMonths;
+                    loanAmountInput.value = profileData.loanAmount;
+                    reducingRateInput.value = profileData.reducingRate;
+                    specialNote.value = profileData.specialNote;
+                    
+                    // Handle credit cards
+                    if (profileData.creditCards && profileData.creditCards.length > 0) {
+                        // First card already exists, so update it
+                        const firstCardElement = document.querySelector('.credit-card-entry');
+                        firstCardElement.querySelector('.card-bank-select').value = profileData.creditCards[0].bank;
+                        firstCardElement.querySelector('.credit-card-amount').value = profileData.creditCards[0].limit;
+                        firstCardElement.querySelector('.credit-card-outstanding').value = profileData.creditCards[0].outstanding;
+                        
+                        // Handle settled state
+                        if (profileData.creditCards[0].settled) {
+                            settledCards.add(0);
+                            firstCardElement.classList.add('card-settled');
+                            const settleBtn = firstCardElement.querySelector('.settle-card-btn');
+                            settleBtn.textContent = 'Unsettle';
+                            settleBtn.classList.remove('bg-primary');
+                            settleBtn.classList.add('bg-red-500');
+                        }
+                        
+                        // Add additional cards
+                        for (let i = 1; i < profileData.creditCards.length; i++) {
+                            addCreditCardBtn.click();
+                            
+                            const cardElements = document.querySelectorAll('.credit-card-entry');
+                            const newCard = cardElements[cardElements.length - 1];
+                            
+                            newCard.querySelector('.card-bank-select').value = profileData.creditCards[i].bank;
+                            newCard.querySelector('.credit-card-amount').value = profileData.creditCards[i].limit;
+                            newCard.querySelector('.credit-card-outstanding').value = profileData.creditCards[i].outstanding;
+                            
+                            // Handle settled state
+                            if (profileData.creditCards[i].settled) {
+                                settledCards.add(i);
+                                newCard.classList.add('card-settled');
+                                const settleBtn = newCard.querySelector('.settle-card-btn');
+                                settleBtn.textContent = 'Unsettle';
+                                settleBtn.classList.remove('bg-primary');
+                                settleBtn.classList.add('bg-red-500');
+                            }
+                        }
+                    }
+                    
+                    // Handle existing loans
+                    if (profileData.existingLoans && profileData.existingLoans.length > 0) {
+                        for (let i = 0; i < profileData.existingLoans.length; i++) {
+                            addExistingLoanBtn.click();
+                            
+                            const loanElements = document.querySelectorAll('.existing-loan-entry');
+                            const loan = loanElements[i];
+                            
+                            loan.querySelector('.loan-type').value = profileData.existingLoans[i].type;
+                            loan.querySelector('.loan-installment').value = profileData.existingLoans[i].installment;
+                            loan.querySelector('.loan-outstanding').value = profileData.existingLoans[i].outstanding;
+                            
+                            // Handle settled state
+                            if (profileData.existingLoans[i].settled) {
+                                settledLoans.add(i);
+                                loan.classList.add('loan-settled');
+                                const settleBtn = loan.querySelector('.settle-loan-btn');
+                                settleBtn.textContent = 'Unsettle';
+                                settleBtn.classList.remove('bg-primary');
+                                settleBtn.classList.add('bg-red-500');
+                            }
+                        }
+                    }
+                    
+                    // Update calculations
+                    updateGrossSalary();
+                    updateDBRCalculator();
+                    updateEMICalculator();
+                    
+                    alert('Profile retrieved successfully!');
+                } catch (error) {
+                    console.error('Error retrieving profile:', error);
+                    alert('Error retrieving profile. Please try again.');
+                }
+            }
+            
+            function deleteCustomerProfile() {
+                const selectedProfile = savedProfilesSelect.value;
+                if (!selectedProfile) {
+                    alert('Please select a profile to delete');
+                    return;
+                }
+                
+                if (!confirm(`Are you sure you want to delete the profile "${selectedProfile}"?`)) {
+                    return;
+                }
+                
+                try {
+                    // Get existing profiles
+                    const existingProfiles = JSON.parse(localStorage.getItem('customerProfiles')) || {};
+                    
+                    // Delete the selected profile
+                    if (existingProfiles[selectedProfile]) {
+                        delete existingProfiles[selectedProfile];
+                        
+                        // Save back to localStorage
+                        localStorage.setItem('customerProfiles', JSON.stringify(existingProfiles));
+                        
+                        // Update dropdown
+                        loadSavedProfiles();
+                        
+                        // Reset the select to default option
+                        savedProfilesSelect.value = '';
+                        
+                        alert('Profile deleted successfully!');
+                    } else {
+                        alert('Profile not found');
+                    }
+                } catch (error) {
+                    console.error('Error deleting profile:', error);
+                    alert('Error deleting profile. Please try again.');
+                }
+            }
+
             // Existing Loans functionality
             addExistingLoanBtn.addEventListener('click', function() {
                 existingLoansContainer.classList.remove('hidden');
@@ -665,7 +1061,7 @@
             function addExistingLoan() {
                 existingLoanCount++;
                 const loanDiv = document.createElement('div');
-                loanDiv.classList.add('grid', 'grid-cols-3', 'gap-4', 'items-center', 'existing-loan-entry');
+                loanDiv.classList.add('grid', 'grid-cols-3', 'gap-3', 'items-center', 'existing-loan-entry');
                 
                 loanDiv.innerHTML = `
                     <div class="flex justify-between items-center">
@@ -1183,8 +1579,32 @@
                 // Calculate DBR percentage
                 const dbrPercentage = (totalLiabilitiesWithEMI / grossSalary) * 100;
                 
-                // Show error if DBR exceeds 49.99%
+                // Calculate the ideal loan amount for 49.95% DBR
+                const allowedDBRPercentage = 49.95;
+                const allowedLiability = grossSalary * (allowedDBRPercentage / 100);
+                const availableForEMI = allowedLiability - currentLiabilities;
+                
+                // Find the loan amount that would result in this EMI
+                // Using binary search
+                let low = 0;
+                let high = grossSalary * 100; // Setting a high upper bound
+                let idealLoanAmount = 0;
+                
+                while (high - low > 1) {
+                    const mid = (low + high) / 2;
+                    const testEMI = calculateEMIWithGracePeriod(mid, reducingRate, tenureMonths, loanType);
+                    
+                    if (testEMI <= availableForEMI) {
+                        low = mid;
+                        idealLoanAmount = mid;
+                    } else {
+                        high = mid;
+                    }
+                }
+                
+                // Show error if DBR exceeds 49.99% with message including ideal amount
                 if (dbrPercentage >= 49.99) {
+                    loanAmountError.textContent = `Error: Loan Amount Will Exceed DBR Limit! Ideal amount: AED ${formatNumber(Math.floor(idealLoanAmount))}`;
                     loanAmountError.classList.remove('hidden');
                 } else {
                     loanAmountError.classList.add('hidden');
@@ -1387,8 +1807,8 @@
                             {
                                 label: 'Principal',
                                 data: principal,
-                                backgroundColor: '#5D5CDE',
-                                borderColor: '#4949c9',
+                                backgroundColor: '#2D336B',
+                                borderColor: '#262a5a',
                                 borderWidth: 1
                             },
                             {
@@ -1450,7 +1870,7 @@
                 }
             }
             
-            // Function to find optimal loan amount for 49.99% DBR
+            // Function to find optimal loan amount for 49.95% DBR
             function findOptimalLoanAmount() {
                 const grossSalary = parseFloat(grossSalaryInput.value.replace(/,/g, '')) || 0;
                 if (grossSalary <= 0) {
@@ -1461,7 +1881,7 @@
                 const reducingRate = parseFloat(reducingRateInput.value) || 0;
                 const tenureMonths = parseInt(tenureMonthsInput.value) || 0;
                 const loanType = loanTypeSelect.value;
-                const allowedLiability = grossSalary * 0.4999; // 49.99% of gross salary
+                const allowedLiability = grossSalary * 0.4995; // 49.95% of gross salary
                 
                 // Get existing loans installments (only for non-settled loans)
                 let totalExistingLoansInstallments = 0;
@@ -1489,7 +1909,7 @@
                 const availableForEMI = allowedLiability - currentLiabilities;
                 
                 if (availableForEMI <= 0) {
-                    alert('Your Current Liabilities Already Exceed The 49.99% DBR Limit. Cannot Calculate Optimal Loan Amount.');
+                    alert('Your Current Liabilities Already Exceed The 49.95% DBR Limit. Cannot Calculate Optimal Loan Amount.');
                     return;
                 }
                 
@@ -1581,9 +2001,14 @@
                 const loanType = loanTypeSelect.value;
                 const grossSalary = parseFloat(grossSalaryInput.value.replace(/,/g, '')) || 0;
                 const daysBetween = daysBetweenInput.value;
+                const customerName = customerNameInput.value.trim();
                 
                 // Restructured message format based on request
                 let message = "";
+                
+                if (customerName) {
+                    message += `*Customer: ${customerName}*\n\n`;
+                }
                 
                 // Heading 1 - Eligibility details
                 message += "*Eligibility details*\n";
@@ -1671,6 +2096,9 @@
                         #removeCreditCardBtn,
                         #findOptimalLoanBtn,
                         #resetBtn,
+                        #saveProfileBtn,
+                        #retrieveProfileBtn,
+                        #deleteProfileBtn,
                         #addExistingLoanBtn,
                         .settle-card-btn,
                         .settle-loan-btn {
@@ -1687,7 +2115,7 @@
                         /* Better spacing */
                         h1, h2 {
                             margin-top: 20px;
-                            color: #5D5CDE !important;
+                            color: #2D336B !important;
                         }
 
                         /* Make sure the full EMI schedule is visible */
@@ -1796,7 +2224,12 @@
                         document.body.removeChild(fullEmiChartClone);
                         
                         // Save the PDF
-                        pdf.save('Customer_Eligibility_Check.pdf');
+                        const customerName = customerNameInput.value.trim();
+                        const filename = customerName ? 
+                            `Customer_Eligibility_${customerName.replace(/\s+/g, '_')}.pdf` : 
+                            'Customer_Eligibility_Check.pdf';
+                        
+                        pdf.save(filename);
                         
                         // Show settle buttons again
                         settleButtons.forEach(btn => btn.style.display = 'block');
@@ -1822,7 +2255,7 @@
             addCreditCardBtn.addEventListener('click', function() {
                 cardCount++;
                 const creditCardDiv = document.createElement('div');
-                creditCardDiv.classList.add('credit-card-entry', 'mb-4');
+                creditCardDiv.classList.add('credit-card-entry', 'mb-3');
                 creditCardDiv.innerHTML = `
                     <div class="flex justify-between items-center mb-2">
                         <label class="text-gray-700 dark:text-gray-300 font-medium">Credit Card ${cardCount}:</label>
@@ -1895,7 +2328,7 @@
                 addbackCount++;
                 
                 const addbackDiv = document.createElement('div');
-                addbackDiv.classList.add('grid', 'grid-cols-3', 'gap-4', 'items-center', 'addback-entry', 'mt-2');
+                addbackDiv.classList.add('grid', 'grid-cols-3', 'gap-3', 'items-center', 'addback-entry', 'mt-2');
                 addbackDiv.innerHTML = `
                     <label class="text-gray-700 dark:text-gray-300 font-medium">Add-back ${addbackCount}:</label>
                     <div class="col-span-2">
@@ -2031,6 +2464,7 @@
             
             // Reset button
             resetBtn.addEventListener('click', function() {
+                customerNameInput.value = '';
                 salaryInput.value = '';
                 grossSalaryInput.value = '';
                 document.querySelector('.credit-card-amount').value = '';
@@ -2093,9 +2527,14 @@
                 firstPaymentDateInput.value = nextMonth.toISOString().split('T')[0];
                 updateDaysBetween(); // Calculate days between
                 
+                // Reset saved profiles dropdown
+                savedProfilesSelect.value = '';
+                
                 // Hide sections
                 emiChartSection.classList.add('hidden');
                 loanComparisonModal.classList.add('hidden');
+                advCalcModal.classList.add('hidden');
+                rateGridModal.classList.add('hidden');
                 
                 // Remove any warning flashes
                 dbrCalculatorSection.classList.remove('dbr-warning-flash');
