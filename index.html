@@ -78,7 +78,6 @@
             border: 1px dashed #6b7280 !important;
         }
         
-        /* Loan settled style */
         .loan-settled {
             opacity: 0.6;
             background-color: #f3f4f6 !important;
@@ -90,7 +89,6 @@
             border: 1px dashed #6b7280 !important;
         }
         
-        /* Modal styles */
         .modal {
             position: fixed;
             top: 0;
@@ -119,7 +117,6 @@
             color: white;
         }
         
-        /* Theme toggle switch */
         .toggle-switch {
             position: relative;
             display: inline-block;
@@ -203,8 +200,8 @@
             <h2 class="text-2xl font-bold text-primary dark:text-white mb-4">MENU</h2>
             
             <!-- WhatsApp Input and Button Group -->
-            <div class="flex items-center justify-between mb-4">
-                <div class="flex items-center w-full md:w-1/2 mr-2">
+            <div class="flex items-center justify-center mb-4">
+                <div class="flex items-center w-full md:w-1/2">
                     <input type="tel" id="whatsappNumber" placeholder="Enter WhatsApp number" class="border rounded-l-md p-2 text-base dark:bg-gray-800 dark:text-white flex-grow">
                     <button id="sendWhatsAppBtn" class="bg-green-600 text-white px-3 py-2 rounded-r-md hover:bg-opacity-80">
                         <i class="fab fa-whatsapp"></i>
@@ -213,35 +210,29 @@
             </div>
             
             <!-- Icon Buttons Grid -->
-            <div class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
-                <a href="https://script.google.com/macros/s/AKfycbyt6zvvO5POe2jMnyaR2bJOPu09L2f2Rr3Aeh72_APIR1C-6JVzSDOZvGfi4ZOZbQL0/exec" class="btn-icon bg-red-500 text-white hover:bg-opacity-80">
-                    <i class="fas fa-chart-line"></i>
-                    <span>Tracker</span>
-                </a>
-                <button id="advCalcBtn" class="btn-icon bg-orange-500 text-white hover:bg-opacity-80">
-                    <i class="fas fa-calculator"></i>
-                    <span>Advanced</span>
-                </button>
-                <button id="showEmiChartBtn" class="btn-icon bg-yellow-400 text-white hover:bg-opacity-80">
-                    <i class="fas fa-chart-bar"></i>
-                    <span>EMI Chart</span>
-                </button>
-                <button id="printBtn" class="btn-icon bg-blue-500 text-white hover:bg-opacity-80">
-                    <i class="fas fa-print"></i>
-                    <span>Print</span>
-                </button>
-                <button id="exportPdfBtn" class="btn-icon bg-blue-800 text-white hover:bg-opacity-80">
-                    <i class="fas fa-file-pdf"></i>
-                    <span>PDF</span>
-                </button>
-                <button id="loanComparisonBtn" class="btn-icon bg-purple-800 text-white hover:bg-opacity-80">
-                    <i class="fas fa-balance-scale"></i>
-                    <span>Compare</span>
-                </button>
-                <button id="rateGridBtn" class="btn-icon bg-teal-700 text-white hover:bg-opacity-80">
-                    <i class="fas fa-table"></i>
-                    <span>Rate Grid</span>
-                </button>
+            <div class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2 justify-center">
+                <div class="col-span-4 sm:col-span-6 md:col-span-8 flex flex-wrap justify-center gap-2">
+                    <a href="https://script.google.com/macros/s/AKfycbyt6zvvO5POe2jMnyaR2bJOPu09L2f2Rr3Aeh72_APIR1C-6JVzSDOZvGfi4ZOZbQL0/exec" class="btn-icon bg-red-500 text-white hover:bg-opacity-80">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Tracker</span>
+                    </a>
+                    <button id="showEmiChartBtn" class="btn-icon bg-yellow-400 text-white hover:bg-opacity-80">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>EMI Chart</span>
+                    </button>
+                    <button id="printBtn" class="btn-icon bg-blue-500 text-white hover:bg-opacity-80">
+                        <i class="fas fa-print"></i>
+                        <span>Print</span>
+                    </button>
+                    <button id="exportPdfBtn" class="btn-icon bg-blue-800 text-white hover:bg-opacity-80">
+                        <i class="fas fa-file-pdf"></i>
+                        <span>PDF</span>
+                    </button>
+                    <button id="loanComparisonBtn" class="btn-icon bg-purple-800 text-white hover:bg-opacity-80">
+                        <i class="fas fa-balance-scale"></i>
+                        <span>Compare</span>
+                    </button>
+                </div>
             </div>
         </div>
         
@@ -345,7 +336,17 @@
                     
                     <div class="grid grid-cols-3 gap-3 items-center">
                         <label class="text-gray-700 dark:text-gray-300 font-medium">DBR Of Credit Card:</label>
-                        <input type="text" id="dbrCC" class="col-span-2 border rounded-md p-2 bg-lightgray dark:bg-gray-700 dark:text-white" readonly>
+                        <div class="col-span-2 flex items-center">
+                            <input type="text" id="dbrCC" class="border rounded-md p-2 bg-lightgray dark:bg-gray-700 dark:text-white flex-grow" readonly>
+                            <div class="ml-2 flex items-center">
+                                <span class="text-gray-700 dark:text-gray-300 text-sm mr-1">3%</span>
+                                <label class="toggle-switch mx-1" style="width: 40px; height: 20px;">
+                                    <input type="checkbox" id="dbrRateToggle">
+                                    <span class="toggle-slider" style="border-radius: 20px;"></span>
+                                </label>
+                                <span class="text-gray-700 dark:text-gray-300 text-sm ml-1">5%</span>
+                            </div>
+                        </div>
                     </div>
                     
                     <div class="grid grid-cols-3 gap-3 items-center">
@@ -614,57 +615,19 @@
         </div>
     </div>
     
-    <!-- Advanced Calculator Modal -->
-    <div id="advCalcModal" class="modal hidden">
-        <div class="modal-content">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-2xl font-bold text-primary dark:text-white">ADVANCED CALCULATOR</h2>
-                <button id="closeAdvCalcModal" class="text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-400 text-2xl">&times;</button>
-            </div>
-            
-            <iframe id="advCalcFrame" src="advcalc.html" class="w-full h-[80vh] border-0"></iframe>
-        </div>
-    </div>
-    
-    <!-- Rate Grid Modal -->
-    <div id="rateGridModal" class="modal hidden">
-        <div class="modal-content">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-2xl font-bold text-primary dark:text-white">RATE GRID</h2>
-                <button id="closeRateGridModal" class="text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-400 text-2xl">&times;</button>
-            </div>
-            
-            <iframe id="rateGridFrame" src="rategrid.html" class="w-full h-[80vh] border-0"></iframe>
-        </div>
-    </div>
-    
     <script>
         // Theme toggle functionality
         const themeToggle = document.getElementById('themeToggle');
         
-        // Default is light mode (set in HTML)
+        // Set light mode as default
+        document.documentElement.classList.remove('dark');
+        themeToggle.checked = false;
+        
         themeToggle.addEventListener('change', function() {
             if (this.checked) {
                 document.documentElement.classList.add('dark');
             } else {
                 document.documentElement.classList.remove('dark');
-            }
-        });
-        
-        // Check for system dark mode preference
-        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            document.documentElement.classList.add('dark');
-            themeToggle.checked = true;
-        }
-        
-        // Listen for changes in system dark mode preference
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
-            if (event.matches) {
-                document.documentElement.classList.add('dark');
-                themeToggle.checked = true;
-            } else {
-                document.documentElement.classList.remove('dark');
-                themeToggle.checked = false;
             }
         });
         
@@ -687,6 +650,7 @@
             const creditCardsContainer = document.getElementById('creditCardsContainer');
             const totalCCLimitInput = document.getElementById('totalCCLimit');
             const dbrCCInput = document.getElementById('dbrCC');
+            const dbrRateToggle = document.getElementById('dbrRateToggle');
             const totalOutstandingInput = document.getElementById('totalOutstanding');
             const customerNameInput = document.getElementById('customerName');
             const savedProfilesSelect = document.getElementById('savedProfiles');
@@ -733,12 +697,6 @@
             const closeComparisonModalBtn = document.getElementById('closeComparisonModal');
             const dbrCalculatorSection = document.getElementById('dbrCalculator');
             const emiCalculatorSection = document.getElementById('emiCalculator');
-            const advCalcBtn = document.getElementById('advCalcBtn');
-            const advCalcModal = document.getElementById('advCalcModal');
-            const closeAdvCalcModal = document.getElementById('closeAdvCalcModal');
-            const rateGridBtn = document.getElementById('rateGridBtn');
-            const rateGridModal = document.getElementById('rateGridModal');
-            const closeRateGridModal = document.getElementById('closeRateGridModal');
             
             // Bank comparison inputs
             const bank1NameInput = document.getElementById('bank1Name');
@@ -780,38 +738,11 @@
             let settledCards = new Set();
             let settledLoans = new Set();
             
+            // Set DBR CC rate toggle to default 3%
+            dbrRateToggle.checked = false;
+            
             // Profile management
             loadSavedProfiles();
-            
-            // Modal event listeners
-            advCalcBtn.addEventListener('click', function() {
-                advCalcModal.classList.remove('hidden');
-            });
-            
-            closeAdvCalcModal.addEventListener('click', function() {
-                advCalcModal.classList.add('hidden');
-            });
-            
-            rateGridBtn.addEventListener('click', function() {
-                rateGridModal.classList.remove('hidden');
-            });
-            
-            closeRateGridModal.addEventListener('click', function() {
-                rateGridModal.classList.add('hidden');
-            });
-            
-            // Close modal when clicking outside
-            advCalcModal.addEventListener('click', function(e) {
-                if (e.target === advCalcModal) {
-                    advCalcModal.classList.add('hidden');
-                }
-            });
-            
-            rateGridModal.addEventListener('click', function(e) {
-                if (e.target === rateGridModal) {
-                    rateGridModal.classList.add('hidden');
-                }
-            });
             
             // Save and retrieve profile functionality
             saveProfileBtn.addEventListener('click', saveCustomerProfile);
@@ -837,7 +768,7 @@
                     loanAmount: loanAmountInput.value,
                     reducingRate: reducingRateInput.value,
                     specialNote: specialNote.value,
-                    // Add any other fields you want to save
+                    dbrRateToggle: dbrRateToggle.checked,
                     
                     // Credit card data
                     creditCards: Array.from(document.querySelectorAll('.credit-card-entry')).map((entry, index) => {
@@ -936,6 +867,7 @@
                     loanAmountInput.value = profileData.loanAmount;
                     reducingRateInput.value = profileData.reducingRate;
                     specialNote.value = profileData.specialNote;
+                    dbrRateToggle.checked = profileData.dbrRateToggle || false;
                     
                     // Handle credit cards
                     if (profileData.creditCards && profileData.creditCards.length > 0) {
@@ -1426,6 +1358,9 @@
                 }
             });
             
+            // Handle DBR rate toggle
+            dbrRateToggle.addEventListener('change', updateDBRCalculator);
+            
             // Function to update DBR calculator
             function updateDBRCalculator() {
                 const grossSalary = parseFloat(grossSalaryInput.value.replace(/,/g, '')) || 0;
@@ -1470,8 +1405,9 @@
                 const totalOutstanding = totalCCOutstanding + totalExistingLoansOutstanding;
                 totalOutstandingInput.value = formatNumber(totalOutstanding.toFixed(2));
                 
-                // Calculate DBR for credit cards (5% of total limit) - changed from 3% to 5%
-                const dbrCC = totalCCLimit * 0.05;
+                // Calculate DBR for credit cards (3% or 5% of total limit based on toggle)
+                const dbrRate = dbrRateToggle.checked ? 0.05 : 0.03;
+                const dbrCC = totalCCLimit * dbrRate;
                 dbrCCInput.value = formatNumber(dbrCC.toFixed(2));
                 
                 // Calculate allowed liability (50% of gross salary)
@@ -1570,7 +1506,8 @@
                     }
                 });
                 
-                const dbrCC = totalCCLimit * 0.05; // Changed from 0.03 to 0.05
+                const dbrRate = dbrRateToggle.checked ? 0.05 : 0.03;
+                const dbrCC = totalCCLimit * dbrRate;
                 const currentLiabilities = totalExistingLoansInstallments + dbrCC;
                 
                 // Calculate total liabilities with EMI
@@ -1625,9 +1562,9 @@
                 // Get current DBR percentage
                 const dbrPercentage = parseFloat(dbrPercentageInput.value) || 0;
                 
-                // Calculate optimal credit card limit using the formula: availableLiability / 5 * 100
-                // Changed from /3 to /5 because DBR CC calculation changed from 3% to 5%
-                const optimalCCLimit = availableLiability / 5 * 100;
+                // Calculate optimal credit card limit using the formula: availableLiability / dbrRate * 100
+                const dbrRate = dbrRateToggle.checked ? 0.05 : 0.03;
+                const optimalCCLimit = availableLiability / dbrRate * 100;
                 
                 if (optimalCCLimit > availableLiability && dbrPercentage < 48.99) {
                     ccSuggestionContainer.classList.remove('hidden');
@@ -1900,7 +1837,8 @@
                         totalCCLimit += parseFloat(limitInput.value) || 0;
                     }
                 });
-                const dbrCC = totalCCLimit * 0.05; // Changed from 0.03 to 0.05
+                const dbrRate = dbrRateToggle.checked ? 0.05 : 0.03;
+                const dbrCC = totalCCLimit * dbrRate;
                 
                 // Current liabilities excluding EMI
                 const currentLiabilities = totalExistingLoansInstallments + dbrCC;
@@ -2475,6 +2413,7 @@
                 loanAmountInput.value = '';
                 reducingRateInput.value = '10';
                 specialNote.value = '';
+                dbrRateToggle.checked = false;
                 
                 // Clear settled cards and loans set
                 settledCards.clear();
@@ -2533,8 +2472,6 @@
                 // Hide sections
                 emiChartSection.classList.add('hidden');
                 loanComparisonModal.classList.add('hidden');
-                advCalcModal.classList.add('hidden');
-                rateGridModal.classList.add('hidden');
                 
                 // Remove any warning flashes
                 dbrCalculatorSection.classList.remove('dbr-warning-flash');
