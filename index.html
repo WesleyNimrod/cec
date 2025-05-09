@@ -1955,7 +1955,7 @@
                 let message = "";
                 
                 if (customerName) {
-                    message += `*Customer Name: ${customerName}*\n\n`;
+                    message += `*Customer: ${customerName}*\n\n`;
                 }
                 
                 // Heading 1 - Eligibility details
@@ -1976,8 +1976,10 @@
                 
                 // Heading 3 - Liabilities & Other details
                 message += "*Liabilities & Other details*\n";
-                message += `Loan Type: ${loanType.replace(/-/g, ' ').toUpperCase()}\n`;
-                message += `Days Between: ${daysBetween}\n`;
+                message += `Loan type: ${loanType.replace(/(fresh|topup|takeover)(-)(\d+)(-)(\d+)/i, (match, p1, p2, p3, p4, p5) => {
+  return `${p1.toLowerCase()} ${p3}-${p5} days`;
+})}\n`;
+                message += `Grace period: ${daysBetween} days\n`;
                 message += `Total Outstanding: AED ${formatNumber(totalOutstanding.toFixed(2))}\n`;
                 message += `Cash In Hand: AED ${formatNumber(cashInHand.toFixed(2))}\n`;
                 message += `Gross Salary: AED ${formatNumber(grossSalary.toFixed(2))}\n`;
