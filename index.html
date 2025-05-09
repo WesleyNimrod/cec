@@ -320,6 +320,7 @@
                                     <option value="FAB">FAB</option>
                                     <option value="ADIB">ADIB</option>
                                     <option value="CBD">CBD</option>
+                                    <option value="HSBC">HSBC</option>
                                     <option value="CITI">CITI</option>
                                     <option value="SCB">SCB</option>
                                     <option value="MASHREQ">MASHREQ</option>
@@ -1954,7 +1955,7 @@
                 let message = "";
                 
                 if (customerName) {
-                    message += `*Customer: ${customerName}*\n\n`;
+                    message += `*Customer Name: ${customerName}*\n\n`;
                 }
                 
                 // Heading 1 - Eligibility details
@@ -1966,19 +1967,19 @@
                 message += `Flat Rate: ${flatRate.toFixed(2)}%\n`;
                 message += `EMI: AED ${formatNumber(emi.toFixed(2))}\n\n`;
                 
-                // Heading 2 - Charges and other details
-                message += "*Charges and other details*\n";
+                // Heading 2 - Charges
+                message += "*Charges*\n";
                 message += `Total Payment: AED ${formatNumber(totalPayment.toFixed(2))}\n`;
-                message += `Total Interest: AED ${formatNumber(totalInterest.toFixed(2))}\n`;
+                message += `Total Profit/Interest: AED ${formatNumber(totalInterest.toFixed(2))}\n`;
                 message += `Processing Fees + VAT: AED ${formatNumber(processingFees.toFixed(2))}\n`;
-                message += `Insurance Fees (AED): 0\n\n`;
+                message += `Insurance Fees: AED 0\n\n`;
                 
                 // Heading 3 - Liabilities & Other details
                 message += "*Liabilities & Other details*\n";
                 message += `Loan Type: ${loanType.replace(/-/g, ' ').toUpperCase()}\n`;
                 message += `Days Between: ${daysBetween}\n`;
                 message += `Total Outstanding: AED ${formatNumber(totalOutstanding.toFixed(2))}\n`;
-                message += `Cash In Hand - NetPay: AED ${formatNumber(cashInHand.toFixed(2))}\n`;
+                message += `Cash In Hand: AED ${formatNumber(cashInHand.toFixed(2))}\n`;
                 message += `Gross Salary: AED ${formatNumber(grossSalary.toFixed(2))}\n`;
                 message += `DBR: ${dbrPercentage.toFixed(2)}%\n`;
                 
@@ -2216,6 +2217,7 @@
                             <option value="FAB">FAB</option>
                             <option value="ADIB">ADIB</option>
                             <option value="CBD">CBD</option>
+                            <option value="HSBC">HSBC</option>
                             <option value="CITI">CITI</option>
                             <option value="SCB">SCB</option>
                             <option value="MASHREQ">MASHREQ</option>
