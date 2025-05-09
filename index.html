@@ -1135,15 +1135,16 @@
                 ccSuggestionContainer.classList.remove('hidden');
                 
                 // Calculate optimal credit limit
-                // Formula: available liability = credit limit * rate
-                // So, credit limit = available liability / rate
+                // Formula: availableLiability = limit * ccRate
+                // Therefore, limit = availableLiability / ccRate
                 const optimalLimit = availableLiability / ccRate;
                 
                 // Round to nearest 1000
                 const roundedLimit = Math.floor(optimalLimit / 1000) * 1000;
                 
                 // Check if the calculated DBR will be within the limit
-                const calculatedDBR = (roundedLimit * ccRate) / parseFloat(grossSalaryInput.value.replace(/,/g, '')) * 100;
+                const grossSalaryValue = parseFloat(grossSalaryInput.value.replace(/,/g, ''));
+                const calculatedDBR = (roundedLimit * ccRate) / grossSalaryValue * 100;
                 
                 if (calculatedDBR <= 49.95) {
                     ccSuggestionText.innerHTML = `
@@ -1153,7 +1154,7 @@
                     `;
                 } else {
                     // If calculated DBR exceeds limit, suggest a lower amount
-                    const safeLimit = (49.95 / 100) * parseFloat(grossSalaryInput.value.replace(/,/g, '')) / ccRate;
+                    const safeLimit = (49.95 / 100) * grossSalaryValue / ccRate;
                     const roundedSafeLimit = Math.floor(safeLimit / 1000) * 1000;
                     
                     ccSuggestionText.innerHTML = `
