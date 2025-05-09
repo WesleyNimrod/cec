@@ -232,6 +232,14 @@
                         <i class="fas fa-balance-scale"></i>
                         <span>Compare</span>
                     </button>
+                    <a href="advcalc.html" class="btn-icon bg-green-600 text-white hover:bg-opacity-80">
+                        <i class="fas fa-calculator"></i>
+                        <span>Adv Calc</span>
+                    </a>
+                    <a href="rategrid.html" class="btn-icon bg-indigo-600 text-white hover:bg-opacity-80">
+                        <i class="fas fa-table"></i>
+                        <span>Rate Grid</span>
+                    </a>
                 </div>
             </div>
         </div>
@@ -678,27 +686,18 @@
             const disbursalDateInput = document.getElementById('disbursalDate');
             const firstPaymentDateInput = document.getElementById('firstPaymentDate');
             const daysBetweenInput = document.getElementById('daysBetween');
-            const dateErrorMsg = document.getElementById('dateError');
+            const dateError = document.getElementById('dateError');
             const showEmiChartBtn = document.getElementById('showEmiChartBtn');
             const emiChartSection = document.getElementById('emiChartSection');
-            const sendWhatsAppBtn = document.getElementById('sendWhatsAppBtn');
-            const whatsappNumberInput = document.getElementById('whatsappNumber');
-            const printBtn = document.getElementById('printBtn');
-            const exportPdfBtn = document.getElementById('exportPdfBtn');
-            const ccSuggestionContainer = document.getElementById('ccSuggestionContainer');
-            const ccSuggestionText = document.getElementById('ccSuggestionText');
-            const addbacksContainer = document.getElementById('addbacks-container');
-            const dynamicAddbackFields = document.querySelector('.dynamic-addback-fields');
+            const emiScheduleBody = document.getElementById('emiScheduleBody');
             const addMoreAddbackBtn = document.getElementById('addMoreAddbackBtn');
             const removeAddbackBtn = document.getElementById('removeAddbackBtn');
-            const specialNote = document.getElementById('specialNote');
+            const addbacksContainer = document.getElementById('addbacks-container');
+            const printBtn = document.getElementById('printBtn');
+            const exportPdfBtn = document.getElementById('exportPdfBtn');
             const loanComparisonBtn = document.getElementById('loanComparisonBtn');
             const loanComparisonModal = document.getElementById('loanComparisonModal');
-            const closeComparisonModalBtn = document.getElementById('closeComparisonModal');
-            const dbrCalculatorSection = document.getElementById('dbrCalculator');
-            const emiCalculatorSection = document.getElementById('emiCalculator');
-            
-            // Bank comparison inputs
+            const closeComparisonModal = document.getElementById('closeComparisonModal');
             const bank1NameInput = document.getElementById('bank1Name');
             const bank1LoanAmountInput = document.getElementById('bank1LoanAmount');
             const bank1TenureInput = document.getElementById('bank1Tenure');
@@ -711,1492 +710,50 @@
             const bank2RateInput = document.getElementById('bank2Rate');
             const bank2EMIInput = document.getElementById('bank2EMI');
             const bank2TotalInterestInput = document.getElementById('bank2TotalInterest');
-            const comparisonResultText = document.getElementById('comparisonResult');
-            
-            // EMI Chart variables
+            const comparisonResultDiv = document.getElementById('comparisonResult');
+            const specialNoteInput = document.getElementById('specialNote');
+            const sendWhatsAppBtn = document.getElementById('sendWhatsAppBtn');
+            const whatsappNumberInput = document.getElementById('whatsappNumber');
+            const ccSuggestionContainer = document.getElementById('ccSuggestionContainer');
+            const ccSuggestionText = document.getElementById('ccSuggestionText');
+
+            // Variables to store calculation states
+            let loanEntryCount = 0;
+            let creditCardCount = 1;
+            let cardSettleStates = [false]; // Track settled status for each card
             let emiChart = null;
-            let existingLoanCount = 0;
+            let addbackEntryCount = 1;
+            const DEFAULT_DBR_PERCENTAGE = 50;
             
-            // Set current date for date inputs
+            // Initialize dates
             const today = new Date();
-            const formattedDate = today.toISOString().split('T')[0];
-            disbursalDateInput.value = formattedDate;
+            disbursalDateInput.value = today.toISOString().substr(0, 10);
             
-            // Add one month to today's date for first payment date
-            const nextMonth = new Date(today);
+            const nextMonth = new Date();
             nextMonth.setMonth(nextMonth.getMonth() + 1);
-            firstPaymentDateInput.value = nextMonth.toISOString().split('T')[0];
+            firstPaymentDateInput.value = nextMonth.toISOString().substr(0, 10);
             
-            // Update days between dates
-            updateDaysBetween();
+            // Calculate days between
+            calculateDaysBetween();
             
-            // Add-back related variables
-            let addbackCount = 1;
-            let addbackData = {};
-            
-            // Track settled credit cards and loans
-            let settledCards = new Set();
-            let settledLoans = new Set();
-            
-            // Set DBR CC rate toggle to default 3%
-            dbrRateToggle.checked = false;
-            
-            // Profile management
+            // Load profiles from local storage
             loadSavedProfiles();
             
-            // Save and retrieve profile functionality
-            saveProfileBtn.addEventListener('click', saveCustomerProfile);
-            retrieveProfileBtn.addEventListener('click', retrieveCustomerProfile);
-            deleteProfileBtn.addEventListener('click', deleteCustomerProfile);
+            // Set up event listeners
+            setupEventListeners();
             
-            function saveCustomerProfile() {
-                const customerName = customerNameInput.value.trim();
-                if (!customerName) {
-                    alert('Please enter a customer name before saving');
-                    return;
-                }
-                
-                // Get all input values to save
-                const profileData = {
-                    customerName: customerName,
-                    salary: salaryInput.value,
-                    loanType: loanTypeSelect.value,
-                    disbursalDate: disbursalDateInput.value,
-                    firstPaymentDate: firstPaymentDateInput.value,
-                    multiplesOfSalary: multiplesOfSalaryInput.value,
-                    tenureMonths: tenureMonthsInput.value,
-                    loanAmount: loanAmountInput.value,
-                    reducingRate: reducingRateInput.value,
-                    specialNote: specialNote.value,
-                    dbrRateToggle: dbrRateToggle.checked,
-                    
-                    // Credit card data
-                    creditCards: Array.from(document.querySelectorAll('.credit-card-entry')).map((entry, index) => {
-                        return {
-                            bank: entry.querySelector('.card-bank-select').value,
-                            limit: entry.querySelector('.credit-card-amount').value,
-                            outstanding: entry.querySelector('.credit-card-outstanding').value,
-                            settled: settledCards.has(index)
-                        };
-                    }),
-                    
-                    // Existing loans data
-                    existingLoans: Array.from(document.querySelectorAll('.existing-loan-entry')).map((entry, index) => {
-                        return {
-                            type: entry.querySelector('.loan-type').value,
-                            installment: entry.querySelector('.loan-installment').value,
-                            outstanding: entry.querySelector('.loan-outstanding').value,
-                            settled: settledLoans.has(index)
-                        };
-                    }),
-                    
-                    // Add-back data
-                    addbackData: addbackData
-                };
-                
-                // Save to localStorage
-                try {
-                    // Get existing profiles
-                    const existingProfiles = JSON.parse(localStorage.getItem('customerProfiles')) || {};
-                    
-                    // Add/update this profile
-                    existingProfiles[customerName] = profileData;
-                    
-                    // Save back to localStorage
-                    localStorage.setItem('customerProfiles', JSON.stringify(existingProfiles));
-                    
-                    // Update dropdown
-                    loadSavedProfiles();
-                    
-                    alert('Profile saved successfully!');
-                } catch (error) {
-                    console.error('Error saving profile:', error);
-                    alert('Error saving profile. Please try again.');
-                }
-            }
-            
-            function loadSavedProfiles() {
-                // Clear existing options except the first one
-                while (savedProfilesSelect.options.length > 1) {
-                    savedProfilesSelect.options.remove(1);
-                }
-                
-                // Get profiles from localStorage
-                try {
-                    const profiles = JSON.parse(localStorage.getItem('customerProfiles')) || {};
-                    
-                    // Add options to select
-                    Object.keys(profiles).forEach(name => {
-                        const option = document.createElement('option');
-                        option.value = name;
-                        option.textContent = name;
-                        savedProfilesSelect.appendChild(option);
-                    });
-                } catch (error) {
-                    console.error('Error loading profiles:', error);
-                }
-            }
-            
-            function retrieveCustomerProfile() {
-                const selectedProfile = savedProfilesSelect.value;
-                if (!selectedProfile) {
-                    alert('Please select a profile to retrieve');
-                    return;
-                }
-                
-                try {
-                    const profiles = JSON.parse(localStorage.getItem('customerProfiles')) || {};
-                    const profileData = profiles[selectedProfile];
-                    
-                    if (!profileData) {
-                        alert('Profile not found');
-                        return;
-                    }
-                    
-                    // Reset form first
-                    resetBtn.click();
-                    
-                    // Fill in the data
-                    customerNameInput.value = profileData.customerName;
-                    salaryInput.value = profileData.salary;
-                    loanTypeSelect.value = profileData.loanType;
-                    disbursalDateInput.value = profileData.disbursalDate;
-                    firstPaymentDateInput.value = profileData.firstPaymentDate;
-                    multiplesOfSalaryInput.value = profileData.multiplesOfSalary;
-                    tenureMonthsInput.value = profileData.tenureMonths;
-                    loanAmountInput.value = profileData.loanAmount;
-                    reducingRateInput.value = profileData.reducingRate;
-                    specialNote.value = profileData.specialNote;
-                    dbrRateToggle.checked = profileData.dbrRateToggle || false;
-                    
-                    // Handle credit cards
-                    if (profileData.creditCards && profileData.creditCards.length > 0) {
-                        // First card already exists, so update it
-                        const firstCardElement = document.querySelector('.credit-card-entry');
-                        firstCardElement.querySelector('.card-bank-select').value = profileData.creditCards[0].bank;
-                        firstCardElement.querySelector('.credit-card-amount').value = profileData.creditCards[0].limit;
-                        firstCardElement.querySelector('.credit-card-outstanding').value = profileData.creditCards[0].outstanding;
-                        
-                        // Handle settled state
-                        if (profileData.creditCards[0].settled) {
-                            settledCards.add(0);
-                            firstCardElement.classList.add('card-settled');
-                            const settleBtn = firstCardElement.querySelector('.settle-card-btn');
-                            settleBtn.textContent = 'Unsettle';
-                            settleBtn.classList.remove('bg-primary');
-                            settleBtn.classList.add('bg-red-500');
-                        }
-                        
-                        // Add additional cards
-                        for (let i = 1; i < profileData.creditCards.length; i++) {
-                            addCreditCardBtn.click();
-                            
-                            const cardElements = document.querySelectorAll('.credit-card-entry');
-                            const newCard = cardElements[cardElements.length - 1];
-                            
-                            newCard.querySelector('.card-bank-select').value = profileData.creditCards[i].bank;
-                            newCard.querySelector('.credit-card-amount').value = profileData.creditCards[i].limit;
-                            newCard.querySelector('.credit-card-outstanding').value = profileData.creditCards[i].outstanding;
-                            
-                            // Handle settled state
-                            if (profileData.creditCards[i].settled) {
-                                settledCards.add(i);
-                                newCard.classList.add('card-settled');
-                                const settleBtn = newCard.querySelector('.settle-card-btn');
-                                settleBtn.textContent = 'Unsettle';
-                                settleBtn.classList.remove('bg-primary');
-                                settleBtn.classList.add('bg-red-500');
-                            }
-                        }
-                    }
-                    
-                    // Handle existing loans
-                    if (profileData.existingLoans && profileData.existingLoans.length > 0) {
-                        for (let i = 0; i < profileData.existingLoans.length; i++) {
-                            addExistingLoanBtn.click();
-                            
-                            const loanElements = document.querySelectorAll('.existing-loan-entry');
-                            const loan = loanElements[i];
-                            
-                            loan.querySelector('.loan-type').value = profileData.existingLoans[i].type;
-                            loan.querySelector('.loan-installment').value = profileData.existingLoans[i].installment;
-                            loan.querySelector('.loan-outstanding').value = profileData.existingLoans[i].outstanding;
-                            
-                            // Handle settled state
-                            if (profileData.existingLoans[i].settled) {
-                                settledLoans.add(i);
-                                loan.classList.add('loan-settled');
-                                const settleBtn = loan.querySelector('.settle-loan-btn');
-                                settleBtn.textContent = 'Unsettle';
-                                settleBtn.classList.remove('bg-primary');
-                                settleBtn.classList.add('bg-red-500');
-                            }
-                        }
-                    }
-                    
-                    // Update calculations
-                    updateGrossSalary();
-                    updateDBRCalculator();
-                    updateEMICalculator();
-                    
-                    alert('Profile retrieved successfully!');
-                } catch (error) {
-                    console.error('Error retrieving profile:', error);
-                    alert('Error retrieving profile. Please try again.');
-                }
-            }
-            
-            function deleteCustomerProfile() {
-                const selectedProfile = savedProfilesSelect.value;
-                if (!selectedProfile) {
-                    alert('Please select a profile to delete');
-                    return;
-                }
-                
-                if (!confirm(`Are you sure you want to delete the profile "${selectedProfile}"?`)) {
-                    return;
-                }
-                
-                try {
-                    // Get existing profiles
-                    const existingProfiles = JSON.parse(localStorage.getItem('customerProfiles')) || {};
-                    
-                    // Delete the selected profile
-                    if (existingProfiles[selectedProfile]) {
-                        delete existingProfiles[selectedProfile];
-                        
-                        // Save back to localStorage
-                        localStorage.setItem('customerProfiles', JSON.stringify(existingProfiles));
-                        
-                        // Update dropdown
-                        loadSavedProfiles();
-                        
-                        // Reset the select to default option
-                        savedProfilesSelect.value = '';
-                        
-                        alert('Profile deleted successfully!');
-                    } else {
-                        alert('Profile not found');
-                    }
-                } catch (error) {
-                    console.error('Error deleting profile:', error);
-                    alert('Error deleting profile. Please try again.');
-                }
-            }
-
-            // Existing Loans functionality
-            addExistingLoanBtn.addEventListener('click', function() {
-                existingLoansContainer.classList.remove('hidden');
-                addExistingLoan();
-            });
-            
-            function addExistingLoan() {
-                existingLoanCount++;
-                const loanDiv = document.createElement('div');
-                loanDiv.classList.add('grid', 'grid-cols-3', 'gap-3', 'items-center', 'existing-loan-entry');
-                
-                loanDiv.innerHTML = `
-                    <div class="flex justify-between items-center">
-                        <select class="loan-type border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white w-full">
-                            <option value="Personal Loan">Personal Loan</option>
-                            <option value="Auto Loan">Auto Loan</option>
-                            <option value="Mortgage Loan">Mortgage Loan</option>
-                        </select>
-                    </div>
-                    <div class="col-span-2 flex">
-                        <input type="number" placeholder="Installment" class="loan-installment border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white w-1/2 mr-1">
-                        <input type="number" placeholder="Outstanding" class="loan-outstanding border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white w-1/2 mr-1">
-                        <button class="settle-loan-btn ml-1 bg-primary text-white px-3 py-1 rounded hover:bg-opacity-80 text-sm">Settle</button>
-                        <button class="remove-loan ml-1 bg-primary text-white p-2 rounded-md hover:bg-opacity-80">×</button>
-                    </div>
-                `;
-                
-                existingLoansContainer.appendChild(loanDiv);
-                
-                // Add event listener to new loan inputs
-                const newLoanInstallment = loanDiv.querySelector('.loan-installment');
-                newLoanInstallment.addEventListener('input', updateDBRCalculator);
-                
-                const newLoanOutstanding = loanDiv.querySelector('.loan-outstanding');
-                newLoanOutstanding.addEventListener('input', updateDBRCalculator);
-                
-                // Add event listener to settle loan button
-                const settleLoanBtn = loanDiv.querySelector('.settle-loan-btn');
-                settleLoanBtn.addEventListener('click', function() {
-                    const loanEntry = this.closest('.existing-loan-entry');
-                    const loanIndex = Array.from(document.querySelectorAll('.existing-loan-entry')).indexOf(loanEntry);
-                    
-                    // Toggle settled state
-                    if (settledLoans.has(loanIndex)) {
-                        settledLoans.delete(loanIndex);
-                        loanEntry.classList.remove('loan-settled');
-                        this.textContent = 'Settle';
-                        this.classList.remove('bg-red-500');
-                        this.classList.add('bg-primary');
-                    } else {
-                        settledLoans.add(loanIndex);
-                        loanEntry.classList.add('loan-settled');
-                        this.textContent = 'Unsettle';
-                        this.classList.remove('bg-primary');
-                        this.classList.add('bg-red-500');
-                    }
-                    
-                    // Update calculations
-                    updateDBRCalculator();
-                });
-                
-                // Add event listener to remove button
-                const removeBtn = loanDiv.querySelector('.remove-loan');
-                removeBtn.addEventListener('click', function() {
-                    const loanEntry = this.closest('.existing-loan-entry');
-                    const loanIndex = Array.from(document.querySelectorAll('.existing-loan-entry')).indexOf(loanEntry);
-                    
-                    // Remove from settled loans if it was settled
-                    if (settledLoans.has(loanIndex)) {
-                        settledLoans.delete(loanIndex);
-                    }
-                    
-                    // Remove the element
-                    loanEntry.remove();
-                    existingLoanCount--;
-                    
-                    if (existingLoanCount === 0) {
-                        existingLoansContainer.classList.add('hidden');
-                    }
-                    
-                    // Recalculate
-                    updateDBRCalculator();
-                });
-            }
-
-            // Function to create the Add-back Type specific fields
-            function createAddbackTypeFields(selectElement) {
-                const addbackType = selectElement.value;
-                const addbackEntry = selectElement.closest('.addback-entry');
-                const index = Array.from(addbacksContainer.querySelectorAll('.addback-entry')).indexOf(addbackEntry);
-                
-                // Clear existing fields for this addback
-                const existingFields = document.getElementById(`addback-fields-${index}`);
-                if (existingFields) {
-                    existingFields.remove();
-                    
-                    // Clear data for this addback
-                    delete addbackData[index];
-                }
-                
-                if (!addbackType) return;
-                
-                // Create new fields container
-                const fieldsContainer = document.createElement('div');
-                fieldsContainer.id = `addback-fields-${index}`;
-                fieldsContainer.classList.add('mt-2', 'p-4', 'border', 'border-gray-200', 'dark:border-gray-600', 'rounded-lg');
-                
-                let html = '';
-                
-                // Initialize data object for this addback
-                addbackData[index] = {
-                    type: addbackType,
-                    values: {}
-                };
-                
-                switch(addbackType) {
-                    case 'hra':
-                    case 'airfare':
-                        html = `
-                            <h3 class="font-semibold mb-2 text-gray-700 dark:text-gray-300">${addbackType === 'hra' ? 'HRA' : 'Airfare Allowance'}</h3>
-                            <div class="flex items-center gap-4 mb-2">
-                                <div class="flex items-center">
-                                    <input type="radio" id="${addbackType}Yearly-${index}" name="${addbackType}Period-${index}" value="yearly" class="mr-2">
-                                    <label for="${addbackType}Yearly-${index}" class="text-gray-700 dark:text-gray-300">Yearly</label>
-                                </div>
-                                <div class="flex items-center">
-                                    <input type="radio" id="${addbackType}Monthly-${index}" name="${addbackType}Period-${index}" value="monthly" class="mr-2">
-                                    <label for="${addbackType}Monthly-${index}" class="text-gray-700 dark:text-gray-300">Monthly</label>
-                                </div>
-                            </div>
-                            <div class="grid grid-cols-1 gap-2">
-                                <div class="flex items-center">
-                                    <label class="text-gray-700 dark:text-gray-300 w-1/3">Amount:</label>
-                                    <input type="number" class="${addbackType}-amount border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white w-2/3">
-                                </div>
-                            </div>
-                        `;
-                        break;
-                    case 'overtime':
-                    case 'servicecharge':
-                    case 'incentives':
-                    case 'telephone':
-                        const title = {
-                            'overtime': 'Over-time',
-                            'servicecharge': 'Service Charge',
-                            'incentives': 'Incentives',
-                            'telephone': 'Telephone Allowance'
-                        }[addbackType];
-                        
-                        html = `<h3 class="font-semibold mb-2 text-gray-700 dark:text-gray-300">${title}</h3>`;
-                        
-                        // Create 6 input fields for 6 months
-                        html += '<div class="grid grid-cols-1 gap-2">';
-                        for (let i = 1; i <= 6; i++) {
-                            html += `
-                                <div class="flex items-center">
-                                    <label class="text-gray-700 dark:text-gray-300 w-1/3">Month ${i}:</label>
-                                    <input type="number" class="${addbackType}-amount-${i} border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white w-2/3">
-                                </div>
-                            `;
-                        }
-                        html += '</div>';
-                        break;
-                }
-                
-                fieldsContainer.innerHTML = html;
-                dynamicAddbackFields.appendChild(fieldsContainer);
-                
-                // Add event listeners to the newly created fields
-                if (addbackType === 'hra' || addbackType === 'airfare') {
-                    // Radio buttons
-                    const yearlyRadio = document.getElementById(`${addbackType}Yearly-${index}`);
-                    const monthlyRadio = document.getElementById(`${addbackType}Monthly-${index}`);
-                    
-                    yearlyRadio.addEventListener('change', updateGrossSalary);
-                    monthlyRadio.addEventListener('change', updateGrossSalary);
-                    
-                    // Amount input
-                    const amountInput = fieldsContainer.querySelector(`.${addbackType}-amount`);
-                    amountInput.addEventListener('input', updateGrossSalary);
-                } else if (['overtime', 'servicecharge', 'incentives', 'telephone'].includes(addbackType)) {
-                    // 6 month inputs
-                    for (let i = 1; i <= 6; i++) {
-                        const amountInput = fieldsContainer.querySelector(`.${addbackType}-amount-${i}`);
-                        amountInput.addEventListener('input', updateGrossSalary);
-                    }
-                }
-            }
-
-            // Function to calculate gross salary from salary and add-backs
-            function updateGrossSalary() {
-                const salary = parseFloat(salaryInput.value) || 0;
-                let totalAddbacks = 0;
-                
-                // Process each add-back
-                Object.keys(addbackData).forEach(index => {
-                    const addback = addbackData[index];
-                    const fieldsContainer = document.getElementById(`addback-fields-${index}`);
-                    
-                    if (fieldsContainer) {
-                        if (addback.type === 'hra' || addback.type === 'airfare') {
-                            const yearlyRadio = document.getElementById(`${addback.type}Yearly-${index}`);
-                            const amountInput = fieldsContainer.querySelector(`.${addback.type}-amount`);
-                            const amount = parseFloat(amountInput.value) || 0;
-                            
-                            if (amount > 0) {
-                                if (yearlyRadio && yearlyRadio.checked) {
-                                    // Yearly amount / 12
-                                    totalAddbacks += amount / 12;
-                                } else {
-                                    // Monthly amount as is
-                                    totalAddbacks += amount;
-                                }
-                            }
-                        } else if (['overtime', 'servicecharge', 'incentives', 'telephone'].includes(addback.type)) {
-                            let sixMonthTotal = 0;
-                            
-                            // Sum up all 6 months
-                            for (let i = 1; i <= 6; i++) {
-                                const amountInput = fieldsContainer.querySelector(`.${addback.type}-amount-${i}`);
-                                sixMonthTotal += parseFloat(amountInput.value) || 0;
-                            }
-                            
-                            // For Telephone Allowance, add directly to calculation
-                            if (addback.type === 'telephone') {
-                                totalAddbacks += sixMonthTotal;
-                            } else {
-                                // For others, divide by 6
-                                totalAddbacks += sixMonthTotal / 6;
-                            }
-                        }
-                    }
-                });
-                
-                // Calculate gross salary
-                const grossSalary = salary + totalAddbacks;
-                grossSalaryInput.value = formatNumber(grossSalary.toFixed(2));
-                
-                // Update other calculations that depend on salary
-                updateDBRCalculator();
-                updateEMICalculator();
-            }
-
-            // Function to calculate standard EMI
-            function calculateStandardEMI(principal, rate, tenure) {
-                const monthlyRate = rate / 12 / 100;
-                const emi = principal * monthlyRate * Math.pow(1 + monthlyRate, tenure) / (Math.pow(1 + monthlyRate, tenure) - 1);
-                return isNaN(emi) || !isFinite(emi) ? 0 : emi;
-            }
-            
-            // Function to get grace period based on loan type
-            function getGracePeriodFromLoanType(loanType) {
-                switch(loanType) {
-                    case 'fresh-0-30':
-                        return 0;
-                    case 'fresh-30-60':
-                    case 'topup-30-60':
-                        return 1;
-                    case 'topup-0-30':
-                        return 0;
-                    case 'takeover-60-90':
-                        return 2;
-                    default:
-                        return 0;
-                }
-            }
-            
-            // Function to calculate EMI with grace period
-            function calculateEMIWithGracePeriod(principal, rate, tenure, loanType) {
-                if (!principal || !rate || !tenure || !loanType) return 0;
-                
-                const monthlyRate = rate / 12 / 100;
-                const gracePeriodMonths = getGracePeriodFromLoanType(loanType);
-                
-                if (gracePeriodMonths === 0) {
-                    // Standard EMI calculation (0-30 days)
-                    return calculateStandardEMI(principal, rate, tenure);
-                } else if (gracePeriodMonths === 1) {
-                    // 30-60 days (add 1 month of interest to principal)
-                    const interest1Month = principal * monthlyRate;
-                    const newPrincipal = principal + interest1Month;
-                    return calculateStandardEMI(newPrincipal, rate, tenure);
-                } else if (gracePeriodMonths === 2) {
-                    // 60-90 days (add 2 months of interest to principal)
-                    const interest2Months = principal * monthlyRate * 2;
-                    const newPrincipal = principal + interest2Months;
-                    return calculateStandardEMI(newPrincipal, rate, tenure);
-                }
-                
-                return 0;
-            }
-            
-            // Function to calculate processing fees
-            function calculateProcessingFees(loanAmount) {
-                // Calculate 1.05% of loan amount
-                const processingFeePercent = loanAmount * 0.0105;
-                
-                if (processingFeePercent > 2625) {
-                    return 2625;
-                } else if (processingFeePercent < 525) {
-                    return 525;
-                } else {
-                    return processingFeePercent;
-                }
-            }
-            
-            // Function to calculate days between two dates
-            function calculateDaysBetween(startDate, endDate) {
-                const start = new Date(startDate);
-                const end = new Date(endDate);
-                const diffTime = Math.abs(end - start);
-                return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            }
-            
-            // Function to update days between
-            function updateDaysBetween() {
-                const disbursalDate = disbursalDateInput.value;
-                const firstPaymentDate = firstPaymentDateInput.value;
-                
-                if (disbursalDate && firstPaymentDate) {
-                    const days = calculateDaysBetween(disbursalDate, firstPaymentDate);
-                    daysBetweenInput.value = days;
-                } else {
-                    daysBetweenInput.value = '';
-                }
-            }
-            
-            // Function to get day range based on loan type
-            function getDayRangeFromLoanType(loanType) {
-                switch(loanType) {
-                    case 'fresh-0-30':
-                    case 'topup-0-30':
-                        return [0, 30];
-                    case 'fresh-30-60':
-                    case 'topup-30-60':
-                        return [31, 60];
-                    case 'takeover-60-90':
-                        return [61, 90];
-                    default:
-                        return [0, 90];
-                }
-            }
-            
-            // Function to capitalize first letter only
-            function capitalizeFirstLetter(string) {
-                return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
-            }
-            
-            // Handle settle card button clicks
-            creditCardsContainer.addEventListener('click', function(e) {
-                if (e.target.classList.contains('settle-card-btn')) {
-                    const cardEntry = e.target.closest('.credit-card-entry');
-                    const cardIndex = Array.from(document.querySelectorAll('.credit-card-entry')).indexOf(cardEntry);
-                    
-                    // Toggle settled state
-                    if (settledCards.has(cardIndex)) {
-                        settledCards.delete(cardIndex);
-                        cardEntry.classList.remove('card-settled');
-                        e.target.textContent = 'Settle';
-                        e.target.classList.remove('bg-red-500');
-                        e.target.classList.add('bg-primary');
-                    } else {
-                        settledCards.add(cardIndex);
-                        cardEntry.classList.add('card-settled');
-                        e.target.textContent = 'Unsettle';
-                        e.target.classList.remove('bg-primary');
-                        e.target.classList.add('bg-red-500');
-                    }
-                    
-                    // Update calculations
-                    updateDBRCalculator();
-                }
-            });
-            
-            // Handle DBR rate toggle
-            dbrRateToggle.addEventListener('change', updateDBRCalculator);
-            
-            // Function to update DBR calculator
-            function updateDBRCalculator() {
-                const grossSalary = parseFloat(grossSalaryInput.value.replace(/,/g, '')) || 0;
-                
-                // Get existing loans installments (only include non-settled loans)
-                let totalExistingLoansInstallments = 0;
-                document.querySelectorAll('.existing-loan-entry').forEach((entry, index) => {
-                    if (!settledLoans.has(index)) {
-                        const installmentInput = entry.querySelector('.loan-installment');
-                        totalExistingLoansInstallments += parseFloat(installmentInput.value) || 0;
-                    }
-                });
-                
-                // Get existing loans outstanding (not counted in DBR)
-                let totalExistingLoansOutstanding = 0;
-                document.querySelectorAll('.loan-outstanding').forEach(input => {
-                    totalExistingLoansOutstanding += parseFloat(input.value) || 0;
-                });
-                
-                // Calculate total credit card limit and outstanding
-                let totalCCLimit = 0;
-                let totalCCOutstanding = 0;
-                
-                document.querySelectorAll('.credit-card-entry').forEach((entry, index) => {
-                    const limitInput = entry.querySelector('.credit-card-amount');
-                    const outstandingInput = entry.querySelector('.credit-card-outstanding');
-                    const limit = parseFloat(limitInput.value) || 0;
-                    const outstanding = parseFloat(outstandingInput.value) || 0;
-                    
-                    // Only include in Total CC Limit if not settled
-                    if (!settledCards.has(index)) {
-                        totalCCLimit += limit;
-                    }
-                    
-                    // Always include in outstanding
-                    totalCCOutstanding += outstanding;
-                });
-                
-                totalCCLimitInput.value = formatNumber(totalCCLimit.toFixed(2));
-                
-                // Calculate total outstanding (not counted in DBR)
-                const totalOutstanding = totalCCOutstanding + totalExistingLoansOutstanding;
-                totalOutstandingInput.value = formatNumber(totalOutstanding.toFixed(2));
-                
-                // Calculate DBR for credit cards (3% or 5% of total limit based on toggle)
-                const dbrRate = dbrRateToggle.checked ? 0.05 : 0.03;
-                const dbrCC = totalCCLimit * dbrRate;
-                dbrCCInput.value = formatNumber(dbrCC.toFixed(2));
-                
-                // Calculate allowed liability (50% of gross salary)
-                const allowedLiability = grossSalary / 2;
-                allowedLiabilityInput.value = formatNumber(allowedLiability.toFixed(2));
-                
-                // Get EMI from loan amount
-                const emi = parseFloat(emiInput.value.replace(/,/g, '')) || 0;
-                
-                // Calculate total liabilities
-                const totalLiabilities = totalExistingLoansInstallments + dbrCC;
-                totalLiabilitiesInput.value = formatNumber(totalLiabilities.toFixed(2));
-                
-                // Calculate new total liabilities (including EMI)
-                const newTotalLiabilities = totalLiabilities + emi;
-                newTotalLiabilitiesInput.value = formatNumber(newTotalLiabilities.toFixed(2));
-                
-                // Calculate available liability by subtracting total liabilities from allowed liability
-                const availableLiability = allowedLiability - newTotalLiabilities;
-                availableLiabilityInput.value = formatNumber(availableLiability.toFixed(2));
-                
-                // Calculate DBR percentage based on new total liabilities
-                const dbrPercentage = (newTotalLiabilities / grossSalary) * 100;
-                dbrPercentageInput.value = dbrPercentage.toFixed(2);
-                
-                // Show warning if DBR is high (49.99% or higher)
-                if (dbrPercentage >= 49.99) {
-                    // Apply red flash warning to the entire calculator sections
-                    dbrCalculatorSection.classList.add('dbr-warning-flash');
-                    emiCalculatorSection.classList.add('dbr-warning-flash');
-                    
-                    // Permanently mark the DBR input field as high
-                    dbrPercentageInput.classList.add('dbr-high');
-                    
-                    // Restore normal appearance after 3 animations (3 seconds)
-                    setTimeout(() => {
-                        dbrCalculatorSection.classList.remove('dbr-warning-flash');
-                        emiCalculatorSection.classList.remove('dbr-warning-flash');
-                    }, 3000);
-                } else {
-                    // Remove high DBR styling if DBR is now below threshold
-                    dbrPercentageInput.classList.remove('dbr-high');
-                }
-                
-                // Check if loan amount would exceed DBR limit
-                checkLoanAmountWithDBR();
-                
-                // Suggest optimal credit card limit
-                suggestCreditCardLimit();
-                
-                // Update Cash in Hand calculation
-                updateCashInHand();
-            }
-            
-            // Function to update Cash in Hand calculation
-            function updateCashInHand() {
-                const loanAmount = parseFloat(loanAmountInput.value) || 0;
-                const totalOutstanding = parseFloat(totalOutstandingInput.value.replace(/,/g, '')) || 0;
-                const cashInHand = loanAmount - totalOutstanding;
-                cashInHandInput.value = formatNumber(cashInHand.toFixed(2));
-            }
-            
-            // Function to check if loan amount would exceed DBR limit
-            function checkLoanAmountWithDBR() {
-                const grossSalary = parseFloat(grossSalaryInput.value.replace(/,/g, '')) || 0;
-                const loanAmount = parseFloat(loanAmountInput.value) || 0;
-                const reducingRate = parseFloat(reducingRateInput.value) || 0;
-                const tenureMonths = parseInt(tenureMonthsInput.value) || 0;
-                const loanType = loanTypeSelect.value;
-                
-                if (grossSalary <= 0 || loanAmount <= 0) {
-                    loanAmountError.classList.add('hidden');
-                    return;
-                }
-                
-                // Calculate EMI for the loan amount
-                const emi = calculateEMIWithGracePeriod(loanAmount, reducingRate, tenureMonths, loanType);
-                
-                // Calculate total liabilities without EMI
-                
-                // Get existing loans installments (only for non-settled loans)
-                let totalExistingLoansInstallments = 0;
-                document.querySelectorAll('.existing-loan-entry').forEach((entry, index) => {
-                    if (!settledLoans.has(index)) {
-                        const installmentInput = entry.querySelector('.loan-installment');
-                        totalExistingLoansInstallments += parseFloat(installmentInput.value) || 0;
-                    }
-                });
-                
-                // Calculate credit card DBR
-                let totalCCLimit = 0;
-                document.querySelectorAll('.credit-card-entry').forEach((entry, index) => {
-                    if (!settledCards.has(index)) {
-                        const limitInput = entry.querySelector('.credit-card-amount');
-                        totalCCLimit += parseFloat(limitInput.value) || 0;
-                    }
-                });
-                
-                const dbrRate = dbrRateToggle.checked ? 0.05 : 0.03;
-                const dbrCC = totalCCLimit * dbrRate;
-                const currentLiabilities = totalExistingLoansInstallments + dbrCC;
-                
-                // Calculate total liabilities with EMI
-                const totalLiabilitiesWithEMI = currentLiabilities + emi;
-                
-                // Calculate DBR percentage
-                const dbrPercentage = (totalLiabilitiesWithEMI / grossSalary) * 100;
-                
-                // Calculate the ideal loan amount for 49.95% DBR
-                const allowedDBRPercentage = 49.95;
-                const allowedLiability = grossSalary * (allowedDBRPercentage / 100);
-                const availableForEMI = allowedLiability - currentLiabilities;
-                
-                // Find the loan amount that would result in this EMI
-                // Using binary search
-                let low = 0;
-                let high = grossSalary * 100; // Setting a high upper bound
-                let idealLoanAmount = 0;
-                
-                while (high - low > 1) {
-                    const mid = (low + high) / 2;
-                    const testEMI = calculateEMIWithGracePeriod(mid, reducingRate, tenureMonths, loanType);
-                    
-                    if (testEMI <= availableForEMI) {
-                        low = mid;
-                        idealLoanAmount = mid;
-                    } else {
-                        high = mid;
-                    }
-                }
-                
-                // Show error if DBR exceeds 49.99% with message including ideal amount
-                if (dbrPercentage >= 49.99) {
-                    loanAmountError.textContent = `Error: Loan Amount Will Exceed DBR Limit! Ideal amount: AED ${formatNumber(Math.floor(idealLoanAmount))}`;
-                    loanAmountError.classList.remove('hidden');
-                } else {
-                    loanAmountError.classList.add('hidden');
-                }
-            }
-            
-            // Function to suggest optimal credit card limit
-            function suggestCreditCardLimit() {
-                const grossSalary = parseFloat(grossSalaryInput.value.replace(/,/g, '')) || 0;
-                if (grossSalary <= 0) {
-                    ccSuggestionContainer.classList.add('hidden');
-                    return;
-                }
-                
-                // Calculate available liability
-                const availableLiability = parseFloat(availableLiabilityInput.value.replace(/,/g, '')) || 0;
-                
-                // Get current DBR percentage
-                const dbrPercentage = parseFloat(dbrPercentageInput.value) || 0;
-                
-                // Calculate optimal credit card limit using the formula: availableLiability / dbrRate * 100
-                const dbrRate = dbrRateToggle.checked ? 0.05 : 0.03;
-                const optimalCCLimit = availableLiability / dbrRate * 100;
-                
-                if (optimalCCLimit > availableLiability && dbrPercentage < 48.99) {
-                    ccSuggestionContainer.classList.remove('hidden');
-                    ccSuggestionText.textContent = (`Based on your available liability of AED ${formatNumber(availableLiability.toFixed(2))} and current DBR of ${dbrPercentage.toFixed(2)}%, the optimal credit card limit for you would be AED ${formatNumber(optimalCCLimit.toFixed(2))}. This would keep your dbr within the 49.99% limit.`);
-                } else {
-                    ccSuggestionContainer.classList.remove('hidden');
-                    ccSuggestionText.textContent = (`Your current liabilities exceed or are close to the 49.99% DBR limit. It is not recommended to apply for any credit cards at this time.`);
-                }
-            }
-            
-            // Function to update EMI calculator
-            function updateEMICalculator() {
-                const grossSalary = parseFloat(grossSalaryInput.value.replace(/,/g, '')) || 0;
-                const multiplesOfSalary = parseFloat(multiplesOfSalaryInput.value) || 0;
-                const loanAmount = parseFloat(loanAmountInput.value) || 0;
-                const reducingRate = parseFloat(reducingRateInput.value) || 0;
-                const tenureMonths = parseInt(tenureMonthsInput.value) || 0;
-                const loanType = loanTypeSelect.value;
-                
-                // Calculate max loan eligibility based on gross salary
-                const maxLoanEligibility = grossSalary * multiplesOfSalary;
-                maxLoanEligibilityInput.value = formatNumber(maxLoanEligibility.toFixed(2));
-                
-                // Calculate flat rate
-                const flatRate = reducingRate / 1.833;
-                flatRateInput.value = flatRate.toFixed(2);
-                
-                if (loanAmount > 0 && reducingRate > 0 && tenureMonths > 0) {
-                    // Calculate EMI with grace period 
-                    const emi = calculateEMIWithGracePeriod(loanAmount, reducingRate, tenureMonths, loanType);
-                    emiInput.value = formatNumber(emi.toFixed(2));
-                    
-                    // Calculate total payment
-                    const totalPayment = emi * tenureMonths;
-                    totalPaymentInput.value = formatNumber(totalPayment.toFixed(2));
-                    
-                    // Calculate total interest
-                    const totalInterest = totalPayment - loanAmount;
-                    totalInterestInput.value = formatNumber(totalInterest.toFixed(2));
-                    
-                    // Calculate processing fees
-                    const processingFees = calculateProcessingFees(loanAmount);
-                    processingFeesInput.value = formatNumber(processingFees.toFixed(2));
-                    
-                    // Update DBR calculator with new EMI amount
-                    updateDBRCalculator();
-                } else {
-                    // Clear outputs if inputs are missing
-                    emiInput.value = '';
-                    totalPaymentInput.value = '';
-                    totalInterestInput.value = '';
-                    processingFeesInput.value = '';
-                }
-            }
-            
-            // Function to validate payment date based on loan type
-            function validatePaymentDate() {
-                const disbursalDate = new Date(disbursalDateInput.value);
-                const firstPaymentDate = new Date(firstPaymentDateInput.value);
-                const loanType = loanTypeSelect.value;
-                
-                if (!disbursalDate || !firstPaymentDate) {
-                    return true; // Skip validation if dates aren't set
-                }
-                
-                const daysDifference = Math.floor((firstPaymentDate - disbursalDate) / (1000 * 60 * 60 * 24));
-                
-                // Get day range allowed for this loan type
-                const [minDays, maxDays] = getDayRangeFromLoanType(loanType);
-                
-                if (daysDifference < minDays || daysDifference > maxDays) {
-                    dateErrorMsg.textContent = `Error: First Payment Date Must Be Between ${minDays} and ${maxDays} Days After Disbursal Date.`;
-                    dateErrorMsg.classList.remove('hidden');
-                    return false;
-                } else if (firstPaymentDate <= disbursalDate) {
-                    dateErrorMsg.textContent = 'Error: First Payment Date Must Be After Disbursal Date.';
-                    dateErrorMsg.classList.remove('hidden');
-                    return false;
-                } else {
-                    dateErrorMsg.classList.add('hidden');
-                    return true;
-                }
-            }
-            
-            // Function to adjust first payment date based on loan type
-            function adjustFirstPaymentDate() {
-                const disbursalDate = new Date(disbursalDateInput.value);
-                if (!disbursalDate) return;
-                
-                const loanType = loanTypeSelect.value;
-                const [minDays, maxDays] = getDayRangeFromLoanType(loanType);
-                
-                // Set first payment date to middle of the allowed range by default
-                const midDays = Math.floor((minDays + maxDays) / 2);
-                const newPaymentDate = new Date(disbursalDate);
-                newPaymentDate.setDate(disbursalDate.getDate() + midDays);
-                
-                firstPaymentDateInput.value = newPaymentDate.toISOString().split('T')[0];
-                updateDaysBetween();
-            }
-            
-            // Function to generate EMI payment schedule 
-            function generateEMISchedule() {
-                const loanAmount = parseFloat(loanAmountInput.value) || 0;
-                const reducingRate = parseFloat(reducingRateInput.value) || 0;
-                const tenureMonths = parseInt(tenureMonthsInput.value) || 0;
-                const loanType = loanTypeSelect.value;
-                
-                if (loanAmount <= 0 || tenureMonths <= 0) {
-                    return [];
-                }
-                
-                // Determine initial principal based on grace period
-                let initialPrincipal = loanAmount;
-                const monthlyRate = reducingRate / 12 / 100;
-                const gracePeriodMonths = getGracePeriodFromLoanType(loanType);
-                
-                if (gracePeriodMonths === 1) {
-                    // Add 1 month of interest accrual
-                    const interest1Month = loanAmount * monthlyRate;
-                    initialPrincipal = loanAmount + interest1Month;
-                } else if (gracePeriodMonths === 2) {
-                    // Add 2 months of interest accrual
-                    const interest2Months = loanAmount * monthlyRate * 2;
-                    initialPrincipal = loanAmount + interest2Months;
-                }
-                
-                const emi = calculateStandardEMI(initialPrincipal, reducingRate, tenureMonths);
-                let remainingPrincipal = initialPrincipal;
-                const schedule = [];
-                
-                for (let month = 1; month <= tenureMonths; month++) {
-                    const interestForMonth = remainingPrincipal * monthlyRate;
-                    const principalForMonth = emi - interestForMonth;
-                    remainingPrincipal -= principalForMonth;
-                    
-                    schedule.push({
-                        month,
-                        emi,
-                        principal: principalForMonth,
-                        interest: interestForMonth,
-                        balance: remainingPrincipal < 0 ? 0 : remainingPrincipal
-                    });
-                }
-                
-                return schedule;
-            }
-            
-            // Function to display EMI chart
-            function displayEMIChart() {
-                const schedule = generateEMISchedule();
-                if (schedule.length === 0) {
-                    alert('Please enter valid loan amount, rate and tenure first.');
-                    return;
-                }
-                
-                emiChartSection.classList.remove('hidden');
-                emiChartSection.scrollIntoView({ behavior: 'smooth' });
-                
-                // Create data for chart
-                const months = schedule.map(entry => entry.month);
-                const principal = schedule.map(entry => entry.principal);
-                const interest = schedule.map(entry => entry.interest);
-                
-                // Destroy previous chart if exists
-                if (emiChart) {
-                    emiChart.destroy();
-                }
-                
-                // Create chart
-                const ctx = document.getElementById('emiChart').getContext('2d');
-                emiChart = new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: months,
-                        datasets: [
-                            {
-                                label: 'Principal',
-                                data: principal,
-                                backgroundColor: '#2D336B',
-                                borderColor: '#262a5a',
-                                borderWidth: 1
-                            },
-                            {
-                                label: 'Interest',
-                                data: interest,
-                                backgroundColor: '#ffba08',
-                                borderColor: '#e85d04',
-                                borderWidth: 1
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            x: {
-                                stacked: true,
-                                title: {
-                                    display: true,
-                                    text: 'Month'
-                                }
-                            },
-                            y: {
-                                stacked: true,
-                                title: {
-                                    display: true,
-                                    text: 'Amount (AED)'
-                                }
-                            }
-                        },
-                        plugins: {
-                            title: {
-                                display: true,
-                                text: 'EMI Breakdown - Principal vs. Interest',
-                                font: {
-                                    size: 16
-                                }
-                            }
-                        }
-                    }
-                });
-                
-                // Populate EMI schedule table
-                const tableBody = document.getElementById('emiScheduleBody');
-                tableBody.innerHTML = '';
-                
-                // Display all months in the schedule
-                for (let i = 0; i < schedule.length; i++) {
-                    const entry = schedule[i];
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td class="border border-gray-300 p-2 text-center">${entry.month}</td>
-                        <td class="border border-gray-300 p-2 text-right">${formatNumber(entry.emi.toFixed(2))}</td>
-                        <td class="border border-gray-300 p-2 text-right">${formatNumber(entry.principal.toFixed(2))}</td>
-                        <td class="border border-gray-300 p-2 text-right">${formatNumber(entry.interest.toFixed(2))}</td>
-                        <td class="border border-gray-300 p-2 text-right">${formatNumber(entry.balance.toFixed(2))}</td>
-                    `;
-                    tableBody.appendChild(row);
-                }
-            }
-            
-            // Function to find optimal loan amount for 49.95% DBR
-            function findOptimalLoanAmount() {
-                const grossSalary = parseFloat(grossSalaryInput.value.replace(/,/g, '')) || 0;
-                if (grossSalary <= 0) {
-                    alert('Please Enter A Valid Salary Amount First.');
-                    return;
-                }
-                
-                const reducingRate = parseFloat(reducingRateInput.value) || 0;
-                const tenureMonths = parseInt(tenureMonthsInput.value) || 0;
-                const loanType = loanTypeSelect.value;
-                const allowedLiability = grossSalary * 0.4995; // 49.95% of gross salary
-                
-                // Get existing loans installments (only for non-settled loans)
-                let totalExistingLoansInstallments = 0;
-                document.querySelectorAll('.existing-loan-entry').forEach((entry, index) => {
-                    if (!settledLoans.has(index)) {
-                        const installmentInput = entry.querySelector('.loan-installment');
-                        totalExistingLoansInstallments += parseFloat(installmentInput.value) || 0;
-                    }
-                });
-                
-                // Calculate credit card DBR
-                let totalCCLimit = 0;
-                document.querySelectorAll('.credit-card-entry').forEach((entry, index) => {
-                    if (!settledCards.has(index)) {
-                        const limitInput = entry.querySelector('.credit-card-amount');
-                        totalCCLimit += parseFloat(limitInput.value) || 0;
-                    }
-                });
-                const dbrRate = dbrRateToggle.checked ? 0.05 : 0.03;
-                const dbrCC = totalCCLimit * dbrRate;
-                
-                // Current liabilities excluding EMI
-                const currentLiabilities = totalExistingLoansInstallments + dbrCC;
-                
-                // Available amount for EMI
-                const availableForEMI = allowedLiability - currentLiabilities;
-                
-                if (availableForEMI <= 0) {
-                    alert('Your Current Liabilities Already Exceed The 49.95% DBR Limit. Cannot Calculate Optimal Loan Amount.');
-                    return;
-                }
-                
-                // Now we need to find the loan amount that would result in this EMI
-                // Using binary search to find optimal loan amount
-                let low = 0;
-                let high = grossSalary * 100; // Setting a very high upper bound
-                let optimalLoanAmount = 0;
-                
-                while (high - low > 1) {
-                    const mid = (low + high) / 2;
-                    const emi = calculateEMIWithGracePeriod(mid, reducingRate, tenureMonths, loanType);
-                    
-                    if (emi <= availableForEMI) {
-                        low = mid;
-                        optimalLoanAmount = mid;
-                    } else {
-                        high = mid;
-                    }
-                }
-                
-                // Update loan amount input
-                loanAmountInput.value = Math.floor(optimalLoanAmount);
-                
-                // Recalculate everything
-                updateEMICalculator();
-            }
-            
-            // Function to calculate and update bank comparison
-            function updateBankComparison() {
-                // Bank 1
-                const bank1LoanAmount = parseFloat(bank1LoanAmountInput.value) || 0;
-                const bank1Tenure = parseInt(bank1TenureInput.value) || 0;
-                const bank1Rate = parseFloat(bank1RateInput.value) || 0;
-                
-                if (bank1LoanAmount > 0 && bank1Tenure > 0 && bank1Rate > 0) {
-                    const bank1EMI = calculateStandardEMI(bank1LoanAmount, bank1Rate, bank1Tenure);
-                    bank1EMIInput.value = formatNumber(bank1EMI.toFixed(2));
-                    
-                    const bank1TotalInterest = (bank1EMI * bank1Tenure) - bank1LoanAmount;
-                    bank1TotalInterestInput.value = formatNumber(bank1TotalInterest.toFixed(2));
-                }
-                
-                // Bank 2
-                const bank2LoanAmount = parseFloat(bank2LoanAmountInput.value) || 0;
-                const bank2Tenure = parseInt(bank2TenureInput.value) || 0;
-                const bank2Rate = parseFloat(bank2RateInput.value) || 0;
-                
-                if (bank2LoanAmount > 0 && bank2Tenure > 0 && bank2Rate > 0) {
-                    const bank2EMI = calculateStandardEMI(bank2LoanAmount, bank2Rate, bank2Tenure);
-                    bank2EMIInput.value = formatNumber(bank2EMI.toFixed(2));
-                    
-                    const bank2TotalInterest = (bank2EMI * bank2Tenure) - bank2LoanAmount;
-                    bank2TotalInterestInput.value = formatNumber(bank2TotalInterest.toFixed(2));
-                }
-                
-                // Compare banks if both have data
-                if (bank1LoanAmount > 0 && bank2LoanAmount > 0) {
-                    const bank1Name = bank1NameInput.value || 'Bank 1';
-                    const bank2Name = bank2NameInput.value || 'Bank 2';
-                    const bank1TotalInterest = parseFloat(bank1TotalInterestInput.value.replace(/,/g, '')) || 0;
-                    const bank2TotalInterest = parseFloat(bank2TotalInterestInput.value.replace(/,/g, '')) || 0;
-                    
-                    if (bank1TotalInterest < bank2TotalInterest) {
-                        comparisonResultText.innerHTML = `<span class="font-bold">${bank1Name}</span> Offers The Better Deal With <span class="font-bold">AED ${formatNumber(bank1TotalInterest.toFixed(2))}</span> In Total Interest Compared To <span class="font-bold">AED ${formatNumber(bank2TotalInterest.toFixed(2))}</span> From ${bank2Name}. <span class="font-bold">You Save AED ${formatNumber((bank2TotalInterest - bank1TotalInterest).toFixed(2))}</span> With ${bank1Name}.`;
-                    } else if (bank2TotalInterest < bank1TotalInterest) {
-                        comparisonResultText.innerHTML = `<span class="font-bold">${bank2Name}</span> Offers The Better Deal With <span class="font-bold">AED ${formatNumber(bank2TotalInterest.toFixed(2))}</span> In Total Interest Compared To <span class="font-bold">AED ${formatNumber(bank1TotalInterest.toFixed(2))}</span> From ${bank1Name}. <span class="font-bold">You Save AED ${formatNumber((bank1TotalInterest - bank2TotalInterest).toFixed(2))}</span> With ${bank2Name}.`;
-                    } else {
-                        comparisonResultText.innerHTML = `Both Banks Offer The Same Total Interest Of <span class="font-bold">AED ${formatNumber(bank1TotalInterest.toFixed(2))}</span>.`;
-                    }
-                }
-            }
-            
-            // Function to prepare WhatsApp message
-            function prepareWhatsAppMessage() {
-                const maxLoanEligibility = parseFloat(maxLoanEligibilityInput.value.replace(/,/g, '')) || 0;
-                const tenureMonths = parseInt(tenureMonthsInput.value) || 0;
-                const loanAmount = parseFloat(loanAmountInput.value) || 0;
-                const reducingRate = parseFloat(reducingRateInput.value) || 0;
-                const flatRate = parseFloat(flatRateInput.value) || 0;
-                const emi = parseFloat(emiInput.value.replace(/,/g, '')) || 0;
-                const totalPayment = parseFloat(totalPaymentInput.value.replace(/,/g, '')) || 0;
-                const totalInterest = parseFloat(totalInterestInput.value.replace(/,/g, '')) || 0;
-                const processingFees = parseFloat(processingFeesInput.value.replace(/,/g, '')) || 0;
-                const cashInHand = parseFloat(cashInHandInput.value.replace(/,/g, '')) || 0;
-                const dbrPercentage = parseFloat(dbrPercentageInput.value) || 0;
-                const specialNoteText = specialNote.value;
-                const totalOutstanding = parseFloat(totalOutstandingInput.value.replace(/,/g, '')) || 0;
-                const loanType = loanTypeSelect.value;
-                const grossSalary = parseFloat(grossSalaryInput.value.replace(/,/g, '')) || 0;
-                const daysBetween = daysBetweenInput.value;
-                const customerName = customerNameInput.value.trim();
-                
-                // Restructured message format based on request
-                let message = "";
-                
-                if (customerName) {
-                    message += `*Customer: ${customerName}*\n\n`;
-                }
-                
-                // Heading 1 - Eligibility details
-                message += "*Eligibility details*\n";
-                message += `Max Loan Eligibity: AED ${formatNumber(maxLoanEligibility.toFixed(2))}\n`;
-                message += `Loan Amount: AED ${formatNumber(loanAmount.toFixed(2))}\n`;
-                message += `Tenure: ${tenureMonths} Months\n`;
-                message += `Reducing Rate: ${reducingRate}%\n`;
-                message += `Flat Rate: ${flatRate.toFixed(2)}%\n`;
-                message += `EMI: AED ${formatNumber(emi.toFixed(2))}\n\n`;
-                
-                // Heading 2 - Charges and other details
-                message += "*Charges and other details*\n";
-                message += `Total Payment: AED ${formatNumber(totalPayment.toFixed(2))}\n`;
-                message += `Total Interest: AED ${formatNumber(totalInterest.toFixed(2))}\n`;
-                message += `Processing Fees + VAT: AED ${formatNumber(processingFees.toFixed(2))}\n`;
-                message += `Insurance Fees (AED): 0\n\n`;
-                
-                // Heading 3 - Liabilities & Other details
-                message += "*Liabilities & Other details*\n";
-                message += `Loan Type: ${loanType.replace(/-/g, ' ').toUpperCase()}\n`;
-                message += `Days Between: ${daysBetween}\n`;
-                message += `Total Outstanding: AED ${formatNumber(totalOutstanding.toFixed(2))}\n`;
-                message += `Cash In Hand - NetPay: AED ${formatNumber(cashInHand.toFixed(2))}\n`;
-                message += `Gross Salary: AED ${formatNumber(grossSalary.toFixed(2))}\n`;
-                message += `DBR: ${dbrPercentage.toFixed(2)}%\n`;
-                
-                if (specialNoteText) {
-                    message += `\n*Special Note:*\n${specialNoteText}\n`;
-                }
-                
-                message += "\n-------------------------\n";
-                message += "The specifics of the installment plan and associated offerings may vary slightly based on the information provided in your profile.";
-                
-                return encodeURIComponent(message);
-            }
-            
-            // Function to print the page
-            function printPage() {
-                // Create a stylesheet for print mode
-                const printStyles = document.createElement('style');
-                printStyles.innerHTML = `
-                    @media print {
-                        body { 
-                            background-color: white; 
-                            margin: 0;
-                            padding: 0;
-                            font-family: 'Tahoma', Geneva, sans-serif;
-                        }
-                        .container { 
-                            width: 100%; 
-                            max-width: 100%; 
-                            padding: 0;
-                        }
-                        
-                        /* Hide elements not needed in print */
-                        button, .non-printable, .toggle-switch, #themeToggle { 
-                            display: none !important; 
-                        }
-                        
-                        /* Hide all sections initially */
-                        #printableArea > div {
-                            display: none !important;
-                        }
-                        
-                        /* Show only DBR Calculator, EMI Calculator and EMI Chart */
-                        #printableArea > h1,
-                        #printableArea > div:nth-child(2),  /* SHARE DETAILS */
-                        #printableArea > div:nth-child(3),  /* Grid with DBR and EMI calculators */
-                        #emiChartSection {
-                            display: block !important;
-                            page-break-inside: avoid;
-                        }
-                        
-                        /* Force EMI chart to be visible on a new page */
-                        #emiChartSection.hidden {
-                            display: block !important;
-                            page-break-before: always;
-                        }
-                        
-                        /* Hide buttons within these sections */
-                        #printableArea button,
-                        #addMoreAddbackBtn,
-                        #removeAddbackBtn,
-                        #addCreditCardBtn,
-                        #removeCreditCardBtn,
-                        #findOptimalLoanBtn,
-                        #resetBtn,
-                        #saveProfileBtn,
-                        #retrieveProfileBtn,
-                        #deleteProfileBtn,
-                        #addExistingLoanBtn,
-                        .settle-card-btn,
-                        .settle-loan-btn {
-                            display: none !important;
-                        }
-                        
-                        /* Make sure form elements are visible */
-                        input, select, textarea { 
-                            border: 1px solid #ccc; 
-                            background-color: white !important;
-                            color: black !important;
-                        }
-                        
-                        /* Better spacing */
-                        h1, h2 {
-                            margin-top: 20px;
-                            color: #2D336B !important;
-                        }
-
-                        /* Make sure the full EMI schedule is visible */
-                        #emiScheduleBody tr {
-                            page-break-inside: avoid;
-                        }
-                    }
-                `;
-                document.head.appendChild(printStyles);
-                
-                // Force EMI chart to be generated if not already visible
-                if (emiChartSection.classList.contains('hidden')) {
-                    displayEMIChart();
-                }
-                
-                window.print();
-                
-                // Clean up
-                setTimeout(() => {
-                    document.head.removeChild(printStyles);
-                }, 1000);
-            }
-            
-            // Function to export as PDF
-            function exportPDF() {
-                // Show loading indicator
-                const loadingDiv = document.createElement('div');
-                loadingDiv.className = 'fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50';
-                loadingDiv.innerHTML = '<div class="bg-white p-4 rounded-lg">Generating PDF...</div>';
-                document.body.appendChild(loadingDiv);
-                
-                // Force generate EMI chart if not already done
-                if (emiChartSection.classList.contains('hidden')) {
-                    displayEMIChart();
-                }
-                
-                // Define PDF dimensions
-                const pageWidth = 210; // A4 width in mm
-                const pageHeight = 297; // A4 height in mm
-                
-                // Initialize jsPDF
-                const { jsPDF } = window.jspdf;
-                const pdf = new jsPDF('p', 'mm', 'a4');
-                
-                // Capture share details, DBR calculator and EMI calculator for page 1
-                const headerElement = document.querySelector('h1');
-                const shareDetailsElement = document.querySelector('.container > div:nth-child(2)');
-                const calculatorsContainer = document.querySelector('.grid.grid-cols-1.md\\:grid-cols-2.gap-6');
-                
-                // Hide elements we don't want in the PDF
-                const settleButtons = document.querySelectorAll('.settle-card-btn, .settle-loan-btn');
-                settleButtons.forEach(btn => btn.style.display = 'none');
-                
-                // Create a temporary div to hold page 1 content
-                const page1Content = document.createElement('div');
-                page1Content.appendChild(headerElement.cloneNode(true));
-                page1Content.appendChild(shareDetailsElement.cloneNode(true));
-                page1Content.appendChild(calculatorsContainer.cloneNode(true));
-                
-                // Style for capture
-                page1Content.style.width = '100%';
-                page1Content.style.backgroundColor = 'white';
-                page1Content.style.padding = '10px';
-                page1Content.style.fontFamily = 'Tahoma, Geneva, sans-serif';
-                page1Content.style.position = 'absolute';
-                page1Content.style.top = '-9999px';
-                
-                // Append to document for html2canvas
-                document.body.appendChild(page1Content);
-                
-                // Capture page 1 with smaller scale to fit better
-                html2canvas(page1Content, { scale: 1.5 }).then(canvas1 => {
-                    const imgData1 = canvas1.toDataURL('image/jpeg', 0.95);
-                    
-                    // Add to PDF (first page)
-                    const imgWidth = pageWidth - 10; // 5mm margin on each side
-                    const imgHeight = (canvas1.height * imgWidth) / canvas1.width;
-                    
-                    pdf.addImage(imgData1, 'JPEG', 5, 5, imgWidth, imgHeight);
-                    
-                    // Remove temporary element
-                    document.body.removeChild(page1Content);
-                    
-                    // Make a copy of the EMI chart section without the row limitation
-                    const fullEmiChartClone = emiChartSection.cloneNode(true);
-                    fullEmiChartClone.style.position = 'absolute';
-                    fullEmiChartClone.style.top = '-9999px';
-                    fullEmiChartClone.style.backgroundColor = 'white';
-                    fullEmiChartClone.style.width = '900px';
-                    fullEmiChartClone.style.padding = '10px';
-                    document.body.appendChild(fullEmiChartClone);
-                    
-                    // For EMI chart page, set a smaller scale
-                    html2canvas(fullEmiChartClone, { scale: 1.3 }).then(canvas2 => {
-                        const imgData2 = canvas2.toDataURL('image/jpeg', 0.95);
-                        
-                        // Add new page for EMI chart
-                        pdf.addPage();
-                        
-                        const chartWidth = pageWidth - 10;
-                        const chartHeight = (canvas2.height * chartWidth) / canvas2.width;
-                        
-                        pdf.addImage(imgData2, 'JPEG', 5, 5, chartWidth, chartHeight);
-                        
-                        // Clean up
-                        document.body.removeChild(fullEmiChartClone);
-                        
-                        // Save the PDF
-                        const customerName = customerNameInput.value.trim();
-                        const filename = customerName ? 
-                            `Customer_Eligibility_${customerName.replace(/\s+/g, '_')}.pdf` : 
-                            'Customer_Eligibility_Check.pdf';
-                        
-                        pdf.save(filename);
-                        
-                        // Show settle buttons again
-                        settleButtons.forEach(btn => btn.style.display = 'block');
-                        
-                        // Remove loading indicator
-                        document.body.removeChild(loadingDiv);
-                    }).catch(err => {
-                        console.error('Error capturing EMI chart:', err);
-                        settleButtons.forEach(btn => btn.style.display = 'block');
-                        document.body.removeChild(loadingDiv);
-                        alert('Error generating PDF. Please try again.');
-                    });
-                }).catch(err => {
-                    console.error('Error capturing page 1:', err);
-                    settleButtons.forEach(btn => btn.style.display = 'block');
-                    document.body.removeChild(loadingDiv);
-                    alert('Error generating PDF. Please try again.');
-                });
-            }
-            
-            // Add Credit Card button
-            let cardCount = 1;
-            addCreditCardBtn.addEventListener('click', function() {
-                cardCount++;
-                const creditCardDiv = document.createElement('div');
-                creditCardDiv.classList.add('credit-card-entry', 'mb-3');
-                creditCardDiv.innerHTML = `
+            // Function to add a new credit card entry
+            function addCreditCardEntry() {
+                creditCardCount++;
+                
+                // Track settled status for the new card
+                cardSettleStates.push(false);
+                
+                const cardDiv = document.createElement('div');
+                cardDiv.className = 'credit-card-entry mb-3';
+                cardDiv.innerHTML = `
                     <div class="flex justify-between items-center mb-2">
-                        <label class="text-gray-700 dark:text-gray-300 font-medium">Credit Card ${cardCount}:</label>
+                        <label class="text-gray-700 dark:text-gray-300 font-medium">Credit Card ${creditCardCount}:</label>
                         <button class="settle-card-btn bg-primary text-white px-4 py-1 rounded hover:bg-opacity-80">Settle</button>
                     </div>
                     <div class="grid grid-cols-4 gap-2">
@@ -2217,296 +774,1109 @@
                         <input type="number" placeholder="Outstanding" class="credit-card-outstanding border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white col-span-2">
                     </div>
                 `;
-                creditCardsContainer.appendChild(creditCardDiv);
+                
+                creditCardsContainer.appendChild(cardDiv);
+                
+                // Add event listener to new settle button
+                const newSettleBtn = cardDiv.querySelector('.settle-card-btn');
+                newSettleBtn.addEventListener('click', function() {
+                    const cardIndex = Array.from(creditCardsContainer.children).indexOf(cardDiv);
+                    toggleCardSettled(cardDiv, cardIndex);
+                });
+                
+                // Add event listeners to inputs
+                const inputs = cardDiv.querySelectorAll('input, select');
+                inputs.forEach(input => {
+                    input.addEventListener('input', calculateEligibility);
+                });
                 
                 // Enable remove button
-                removeCreditCardBtn.disabled = false;
+                removeCreditCardBtn.disabled = creditCardCount <= 1;
                 
-                // Add event listener to new credit card inputs
-                const newCreditCardInput = creditCardDiv.querySelector('.credit-card-amount');
-                newCreditCardInput.addEventListener('input', updateDBRCalculator);
-                
-                const newOutstandingInput = creditCardDiv.querySelector('.credit-card-outstanding');
-                newOutstandingInput.addEventListener('input', updateDBRCalculator);
-            });
+                // Recalculate
+                calculateEligibility();
+            }
             
-            // Remove Credit Card button
-            removeCreditCardBtn.addEventListener('click', function() {
-                if (cardCount > 1) {
-                    const creditCardEntries = document.querySelectorAll('.credit-card-entry');
-                    const lastEntry = creditCardEntries[creditCardEntries.length - 1];
-                    const lastEntryIndex = Array.from(document.querySelectorAll('.credit-card-entry')).indexOf(lastEntry);
+            // Function to remove the last credit card entry
+            function removeLastCreditCard() {
+                if (creditCardCount > 1) {
+                    creditCardsContainer.removeChild(creditCardsContainer.lastChild);
+                    creditCardCount--;
+                    cardSettleStates.pop();
                     
-                    // Remove from settled cards if it was settled
-                    if (settledCards.has(lastEntryIndex)) {
-                        settledCards.delete(lastEntryIndex);
-                    }
+                    // Disable remove button if only one card remains
+                    removeCreditCardBtn.disabled = creditCardCount <= 1;
                     
-                    // Remove the element
-                    lastEntry.remove();
-                    cardCount--;
-                    
-                    if (cardCount === 1) {
-                        removeCreditCardBtn.disabled = true;
-                    }
-                    
-                    updateDBRCalculator();
+                    // Recalculate
+                    calculateEligibility();
                 }
-            });
+            }
             
-            // Add-back Type select event listener
-            addbacksContainer.addEventListener('change', function(e) {
-                if (e.target.classList.contains('addback-type')) {
-                    createAddbackTypeFields(e.target);
-                }
-            });
-            
-            // Add More Add-back button
-            addMoreAddbackBtn.addEventListener('click', function() {
-                addbackCount++;
+            // Function to toggle card settled state
+            function toggleCardSettled(cardDiv, cardIndex) {
+                const isSettled = cardSettleStates[cardIndex];
+                const settleBtn = cardDiv.querySelector('.settle-card-btn');
                 
-                const addbackDiv = document.createElement('div');
-                addbackDiv.classList.add('grid', 'grid-cols-3', 'gap-3', 'items-center', 'addback-entry', 'mt-2');
-                addbackDiv.innerHTML = `
-                    <label class="text-gray-700 dark:text-gray-300 font-medium">Add-back ${addbackCount}:</label>
-                    <div class="col-span-2">
-                        <select class="addback-type border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white w-full">
-                            <option value="">Select Add-back Type</option>
-                            <option value="hra">HRA</option>
-                            <option value="airfare">Airfare Allowance</option>
-                            <option value="overtime">Over-time</option>
-                            <option value="servicecharge">Service Charge</option>
-                            <option value="incentives">Incentives</option>
-                            <option value="telephone">Telephone Allowance</option>
+                if (isSettled) {
+                    // Unsettling the card
+                    cardDiv.classList.remove('card-settled');
+                    settleBtn.textContent = 'Settle';
+                    cardSettleStates[cardIndex] = false;
+                } else {
+                    // Settling the card
+                    cardDiv.classList.add('card-settled');
+                    settleBtn.textContent = 'Unsettled';
+                    cardSettleStates[cardIndex] = true;
+                }
+                
+                calculateEligibility(); // Recalculate with the new settled state
+            }
+            
+            // Function to add an existing loan entry
+            function addExistingLoanEntry() {
+                loanEntryCount++;
+                
+                // Create loan entry div
+                const loanDiv = document.createElement('div');
+                loanDiv.className = 'existing-loan-item bg-white dark:bg-gray-800 p-3 rounded-lg border border-primary';
+                loanDiv.innerHTML = `
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="text-gray-700 dark:text-gray-300 font-medium">Loan ${loanEntryCount}:</label>
+                        <button class="settle-loan-btn bg-primary text-white px-4 py-1 rounded hover:bg-opacity-80">Settle</button>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <select class="loan-type-select border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white">
+                            <option value="auto">Auto Loan</option>
+                            <option value="personal">Personal Loan</option>
+                            <option value="mortgage">Mortgage</option>
+                            <option value="business">Business Loan</option>
+                            <option value="other">Other</option>
                         </select>
+                        <input type="number" placeholder="EMI Amount" class="loan-emi-amount border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white">
+                        <input type="number" placeholder="Outstanding" class="loan-outstanding border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white">
                     </div>
                 `;
                 
-                addbacksContainer.appendChild(addbackDiv);
+                existingLoansContainer.appendChild(loanDiv);
+                existingLoansContainer.classList.remove('hidden');
                 
-                // Enable remove button once we have more than one addback
-                removeAddbackBtn.disabled = false;
-            });
+                // Add event listeners
+                const inputs = loanDiv.querySelectorAll('input, select');
+                inputs.forEach(input => {
+                    input.addEventListener('input', calculateEligibility);
+                });
+                
+                const settleBtn = loanDiv.querySelector('.settle-loan-btn');
+                settleBtn.addEventListener('click', function() {
+                    toggleLoanSettled(loanDiv);
+                });
+            }
             
-            // Remove Add-back button
-            removeAddbackBtn.addEventListener('click', function() {
-                if (addbackCount > 1) {
-                    const addbackEntries = addbacksContainer.querySelectorAll('.addback-entry');
-                    const lastAddbackEntry = addbackEntries[addbackEntries.length - 1];
+            // Function to toggle loan settled state
+            function toggleLoanSettled(loanDiv) {
+                if (loanDiv.classList.contains('loan-settled')) {
+                    // Unsettling the loan
+                    loanDiv.classList.remove('loan-settled');
+                    loanDiv.querySelector('.settle-loan-btn').textContent = 'Settle';
+                } else {
+                    // Settling the loan
+                    loanDiv.classList.add('loan-settled');
+                    loanDiv.querySelector('.settle-loan-btn').textContent = 'Unsettled';
+                }
+                
+                calculateEligibility(); // Recalculate with the new settled state
+            }
+            
+            // Function to calculate days between disbursal and first payment
+            function calculateDaysBetween() {
+                const disbursalDate = new Date(disbursalDateInput.value);
+                const firstPaymentDate = new Date(firstPaymentDateInput.value);
+                
+                if (disbursalDate && firstPaymentDate) {
+                    // Calculate difference in days
+                    const timeDiff = firstPaymentDate.getTime() - disbursalDate.getTime();
+                    const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
                     
-                    // Get index of the last entry to remove associated fields
-                    const index = Array.from(addbacksContainer.querySelectorAll('.addback-entry')).indexOf(lastAddbackEntry);
+                    daysBetweenInput.value = daysDiff;
                     
-                    // Remove the entry
-                    lastAddbackEntry.remove();
+                    // Validate days between
+                    if (daysDiff < 15 || daysDiff > 75) {
+                        dateError.classList.remove('hidden');
+                    } else {
+                        dateError.classList.add('hidden');
+                    }
+                }
+            }
+            
+            // Function to load saved profiles from local storage
+            function loadSavedProfiles() {
+                // Clear existing options
+                while (savedProfilesSelect.options.length > 1) {
+                    savedProfilesSelect.remove(1);
+                }
+                
+                // Get all local storage keys
+                const profiles = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key.startsWith('profile_')) {
+                        profiles.push(key.substring(8)); // Remove 'profile_' prefix
+                    }
+                }
+                
+                // Sort profiles alphabetically
+                profiles.sort();
+                
+                // Add options to select
+                profiles.forEach(profile => {
+                    const option = document.createElement('option');
+                    option.value = profile;
+                    option.textContent = profile;
+                    savedProfilesSelect.appendChild(option);
+                });
+            }
+            
+            // Function to calculate EMI
+            function calculateEMI(principal, ratePerMonth, numMonths) {
+                if (ratePerMonth === 0) {
+                    return principal / numMonths;
+                }
+                
+                const numerator = principal * ratePerMonth * Math.pow(1 + ratePerMonth, numMonths);
+                const denominator = Math.pow(1 + ratePerMonth, numMonths) - 1;
+                return numerator / denominator;
+            }
+            
+            // Function to calculate flat rate equivalent
+            function calculateFlatRate(reducingRate, tenure) {
+                // Flat rate approximation formula (approximate conversion)
+                return (reducingRate * 1.85) / (1 + (tenure / 12) * 0.15);
+            }
+            
+            // Function to calculate outstanding balance
+            function calculateOutstandingLoanBalance() {
+                let totalOutstanding = 0;
+                
+                // Calculate outstanding from existing loans
+                const loanItems = existingLoansContainer.querySelectorAll('.existing-loan-item');
+                loanItems.forEach(loan => {
+                    if (!loan.classList.contains('loan-settled')) {
+                        const outstandingInput = loan.querySelector('.loan-outstanding');
+                        if (outstandingInput && outstandingInput.value) {
+                            totalOutstanding += parseFloat(outstandingInput.value);
+                        }
+                    }
+                });
+                
+                // Calculate outstanding from credit cards
+                const cardItems = creditCardsContainer.querySelectorAll('.credit-card-entry');
+                cardItems.forEach((card, index) => {
+                    if (!cardSettleStates[index]) {
+                        const outstandingInput = card.querySelector('.credit-card-outstanding');
+                        if (outstandingInput && outstandingInput.value) {
+                            totalOutstanding += parseFloat(outstandingInput.value);
+                        }
+                    }
+                });
+                
+                return totalOutstanding;
+            }
+            
+            // Main function to calculate eligibility
+            function calculateEligibility() {
+                const salary = parseFloat(salaryInput.value) || 0;
+                
+                // Calculate gross salary (base + add-backs)
+                let grossSalary = salary;
+                
+                // Add all the add-backs
+                const addbackEntries = addbacksContainer.querySelectorAll('.addback-entry');
+                addbackEntries.forEach(entry => {
+                    const addbackType = entry.querySelector('.addback-type').value;
+                    if (addbackType) {
+                        const nextDiv = entry.nextElementSibling;
+                        if (nextDiv && nextDiv.classList.contains('addback-amount-entry')) {
+                            const amountInput = nextDiv.querySelector('.addback-amount');
+                            if (amountInput && amountInput.value) {
+                                grossSalary += parseFloat(amountInput.value);
+                            }
+                        }
+                    }
+                });
+                
+                // Update gross salary field
+                grossSalaryInput.value = formatNumber(grossSalary.toFixed(2));
+                
+                // Calculate allowed liability (50% of gross salary)
+                const allowedLiability = grossSalary * (DEFAULT_DBR_PERCENTAGE / 100);
+                allowedLiabilityInput.value = formatNumber(allowedLiability.toFixed(2));
+                
+                // Calculate total liabilities from existing loans
+                let totalLiabilities = 0;
+                
+                // Add liabilities from existing loans
+                const loanItems = existingLoansContainer.querySelectorAll('.existing-loan-item');
+                loanItems.forEach(loan => {
+                    if (!loan.classList.contains('loan-settled')) {
+                        const emiInput = loan.querySelector('.loan-emi-amount');
+                        if (emiInput && emiInput.value) {
+                            totalLiabilities += parseFloat(emiInput.value);
+                        }
+                    }
+                });
+                
+                // Calculate Credit Card DBR
+                let totalCCLimit = 0;
+                const cardItems = creditCardsContainer.querySelectorAll('.credit-card-entry');
+                cardItems.forEach((card, index) => {
+                    if (!cardSettleStates[index]) {
+                        const limitInput = card.querySelector('.credit-card-amount');
+                        if (limitInput && limitInput.value) {
+                            totalCCLimit += parseFloat(limitInput.value);
+                        }
+                    }
+                });
+                
+                // Update total CC limit field
+                totalCCLimitInput.value = formatNumber(totalCCLimit.toFixed(2));
+                
+                // Calculate CC DBR based on toggle
+                const ccRate = dbrRateToggle.checked ? 0.05 : 0.03; // 5% or 3%
+                const ccDBR = totalCCLimit * ccRate;
+                dbrCCInput.value = formatNumber(ccDBR.toFixed(2));
+                
+                // Add CC DBR to total liabilities
+                totalLiabilities += ccDBR;
+                
+                // Calculate total liabilities and available liability
+                totalLiabilitiesInput.value = formatNumber(totalLiabilities.toFixed(2));
+                const availableLiability = Math.max(0, allowedLiability - totalLiabilities);
+                availableLiabilityInput.value = formatNumber(availableLiability.toFixed(2));
+                
+                // Calculate DBR percentage
+                const dbrPercentage = grossSalary > 0 ? (totalLiabilities / grossSalary) * 100 : 0;
+                dbrPercentageInput.value = dbrPercentage.toFixed(2) + '%';
+                
+                // Show warning if DBR is greater than or equal to 50%
+                if (dbrPercentage >= 49.95) {
+                    dbrPercentageInput.classList.add('dbr-high');
+                } else {
+                    dbrPercentageInput.classList.remove('dbr-high');
+                }
+                
+                // Update total outstanding
+                const outstandingBalance = calculateOutstandingLoanBalance();
+                totalOutstandingInput.value = formatNumber(outstandingBalance.toFixed(2));
+                
+                // Calculate max loan eligibility based on salary multiples
+                const multiplesOfSalary = parseFloat(multiplesOfSalaryInput.value) || 15;
+                const maxLoanEligibility = grossSalary * multiplesOfSalary;
+                maxLoanEligibilityInput.value = formatNumber(maxLoanEligibility.toFixed(2));
+                
+                // Calculate EMI and other loan details
+                const loanAmount = parseFloat(loanAmountInput.value) || 0;
+                const tenure = parseInt(tenureMonthsInput.value) || 48;
+                const reducingRate = parseFloat(reducingRateInput.value) || 10;
+                
+                if (loanAmount > 0 && tenure > 0) {
+                    // Calculate monthly interest rate
+                    const monthlyRate = reducingRate / 1200; // Annual to monthly and percentage to decimal
                     
-                    // Remove associated fields if they exist
-                    const fieldsContainer = document.getElementById(`addback-fields-${index}`);
-                    if (fieldsContainer) {
-                        fieldsContainer.remove();
+                    // Calculate EMI
+                    const emi = calculateEMI(loanAmount, monthlyRate, tenure);
+                    emiInput.value = formatNumber(emi.toFixed(2));
+                    
+                    // Calculate total payment
+                    const totalPayment = emi * tenure;
+                    totalPaymentInput.value = formatNumber(totalPayment.toFixed(2));
+                    
+                    // Calculate total interest
+                    const totalInterest = totalPayment - loanAmount;
+                    totalInterestInput.value = formatNumber(totalInterest.toFixed(2));
+                    
+                    // Calculate flat rate equivalent
+                    const flatRate = calculateFlatRate(reducingRate, tenure);
+                    flatRateInput.value = flatRate.toFixed(2) + '%';
+                    
+                    // Calculate processing fees (1% of loan amount + 5% VAT)
+                    const processingFee = loanAmount * 0.01;
+                    const vatOnFee = processingFee * 0.05;
+                    const totalFees = processingFee + vatOnFee;
+                    processingFeesInput.value = formatNumber(totalFees.toFixed(2));
+                    
+                    // Calculate cash in hand
+                    const cashInHand = loanAmount - outstandingBalance - totalFees;
+                    cashInHandInput.value = formatNumber(cashInHand.toFixed(2));
+                    
+                    // Calculate new total liabilities
+                    const newTotalLiabilities = totalLiabilities - ccDBR + emi;
+                    newTotalLiabilitiesInput.value = formatNumber(newTotalLiabilities.toFixed(2));
+                    
+                    // Check if EMI would exceed available liability
+                    if (emi > availableLiability) {
+                        loanAmountError.classList.remove('hidden');
+                        loanAmountInput.classList.add('dbr-warning-flash');
+                    } else {
+                        loanAmountError.classList.add('hidden');
+                        loanAmountInput.classList.remove('dbr-warning-flash');
                     }
                     
-                    // Delete data for this addback
-                    delete addbackData[index];
-                    
-                    // Decrement counter
-                    addbackCount--;
-                    
-                    // Disable remove button if only one entry remains
-                    if (addbackCount === 1) {
-                        removeAddbackBtn.disabled = true;
+                    // Show credit card suggestion if salary > 0
+                    if (grossSalary > 0) {
+                        showCreditCardSuggestion(availableLiability, ccRate);
+                    } else {
+                        ccSuggestionContainer.classList.add('hidden');
                     }
+                }
+            }
+            
+            // Function to show credit card suggestion
+            function showCreditCardSuggestion(availableLiability, ccRate) {
+                ccSuggestionContainer.classList.remove('hidden');
+                
+                // Calculate optimal credit limit
+                // Formula: available liability = credit limit * rate
+                // So, credit limit = available liability / rate
+                const optimalLimit = availableLiability / ccRate;
+                
+                // Round to nearest 1000
+                const roundedLimit = Math.floor(optimalLimit / 1000) * 1000;
+                
+                // Check if the calculated DBR will be within the limit
+                const calculatedDBR = (roundedLimit * ccRate) / parseFloat(grossSalaryInput.value.replace(/,/g, '')) * 100;
+                
+                if (calculatedDBR <= 49.95) {
+                    ccSuggestionText.innerHTML = `
+                        <p>Based on your available liability, we suggest:</p>
+                        <p class="font-bold text-lg mt-2">Optimal Credit Card Limit: AED ${formatNumber(roundedLimit)}</p>
+                        <p class="text-sm mt-1">This would use approximately AED ${formatNumber((roundedLimit * ccRate).toFixed(2))} of your available liability.</p>
+                    `;
+                } else {
+                    // If calculated DBR exceeds limit, suggest a lower amount
+                    const safeLimit = (49.95 / 100) * parseFloat(grossSalaryInput.value.replace(/,/g, '')) / ccRate;
+                    const roundedSafeLimit = Math.floor(safeLimit / 1000) * 1000;
                     
-                    // Update calculations
-                    updateGrossSalary();
+                    ccSuggestionText.innerHTML = `
+                        <p>To maintain DBR below 50%, we suggest:</p>
+                        <p class="font-bold text-lg mt-2">Safe Credit Card Limit: AED ${formatNumber(roundedSafeLimit)}</p>
+                        <p class="text-sm mt-1">This would keep your DBR below the 50% threshold.</p>
+                    `;
                 }
-            });
+            }
             
-            // Input event listeners
-            salaryInput.addEventListener('input', updateGrossSalary);
-            
-            // Add event listeners to initial credit card inputs
-            document.querySelector('.credit-card-amount').addEventListener('input', updateDBRCalculator);
-            document.querySelector('.credit-card-outstanding').addEventListener('input', updateDBRCalculator);
-            
-            loanTypeSelect.addEventListener('change', function() {
-                adjustFirstPaymentDate();
-                validatePaymentDate();
-                updateDaysBetween();
-                updateEMICalculator();
-            });
-            
-            multiplesOfSalaryInput.addEventListener('input', updateEMICalculator);
-            tenureMonthsInput.addEventListener('input', updateEMICalculator);
-            loanAmountInput.addEventListener('input', function() {
-                checkLoanAmountWithDBR();
-                updateEMICalculator();
-            });
-            reducingRateInput.addEventListener('input', updateEMICalculator);
-            
-            // Date validation and days between calculation
-            disbursalDateInput.addEventListener('change', function() {
-                validatePaymentDate();
-                updateDaysBetween();
-                updateEMICalculator();
-            });
-            
-            firstPaymentDateInput.addEventListener('change', function() {
-                validatePaymentDate();
-                updateDaysBetween();
-                updateEMICalculator();
-            });
-            
-            // Bank comparison inputs
-            bank1LoanAmountInput.addEventListener('input', updateBankComparison);
-            bank1TenureInput.addEventListener('input', updateBankComparison);
-            bank1RateInput.addEventListener('input', updateBankComparison);
-            bank1NameInput.addEventListener('input', updateBankComparison);
-            bank2LoanAmountInput.addEventListener('input', updateBankComparison);
-            bank2TenureInput.addEventListener('input', updateBankComparison);
-            bank2RateInput.addEventListener('input', updateBankComparison);
-            bank2NameInput.addEventListener('input', updateBankComparison);
-            
-            // Find Optimal Loan button
-            findOptimalLoanBtn.addEventListener('click', findOptimalLoanAmount);
-            
-            // Show EMI Chart button
-            showEmiChartBtn.addEventListener('click', displayEMIChart);
-            
-            // Loan Comparison button - show modal instead of section
-            loanComparisonBtn.addEventListener('click', function() {
-                // Show the modal
-                loanComparisonModal.classList.remove('hidden');
-                
-                // Pre-fill Bank 1 with current values
-                bank1NameInput.value = "ADCB";
-                bank1LoanAmountInput.value = loanAmountInput.value;
-                bank1TenureInput.value = tenureMonthsInput.value;
-                bank1RateInput.value = reducingRateInput.value;
-                
-                // Update comparison
-                updateBankComparison();
-            });
-            
-            // Close loan comparison modal
-            closeComparisonModalBtn.addEventListener('click', function() {
-                loanComparisonModal.classList.add('hidden');
-            });
-            
-            // Close modal if user clicks outside
-            loanComparisonModal.addEventListener('click', function(e) {
-                if (e.target === loanComparisonModal) {
-                    loanComparisonModal.classList.add('hidden');
-                }
-            });
-            
-            // Reset button
-            resetBtn.addEventListener('click', function() {
-                customerNameInput.value = '';
-                salaryInput.value = '';
-                grossSalaryInput.value = '';
-                document.querySelector('.credit-card-amount').value = '';
-                document.querySelector('.credit-card-outstanding').value = '';
-                loanTypeSelect.value = 'fresh-0-30';
-                multiplesOfSalaryInput.value = '15';
-                tenureMonthsInput.value = '48';
-                loanAmountInput.value = '';
-                reducingRateInput.value = '10';
-                specialNote.value = '';
-                dbrRateToggle.checked = false;
-                
-                // Clear settled cards and loans set
-                settledCards.clear();
-                settledLoans.clear();
-                
-                // Remove extra credit cards
-                const creditCardEntries = document.querySelectorAll('.credit-card-entry');
-                for (let i = 1; i < creditCardEntries.length; i++) {
-                    creditCardEntries[i].remove();
-                }
-                cardCount = 1;
-                removeCreditCardBtn.disabled = true;
-                
-                // Remove "settled" class from first card
-                const firstCardEntry = document.querySelector('.credit-card-entry');
-                firstCardEntry.classList.remove('card-settled');
-                const firstSettleBtn = firstCardEntry.querySelector('.settle-card-btn');
-                firstSettleBtn.textContent = 'Settle';
-                firstSettleBtn.classList.remove('bg-red-500');
-                firstSettleBtn.classList.add('bg-primary');
-                
-                // Remove existing loans
-                existingLoansContainer.innerHTML = '';
-                existingLoansContainer.classList.add('hidden');
-                existingLoanCount = 0;
-                
-                // Remove extra addbacks
-                const addbackEntries = document.querySelectorAll('.addback-entry');
-                for (let i = 1; i < addbackEntries.length; i++) {
-                    addbackEntries[i].remove();
-                }
-                addbackCount = 1;
-                removeAddbackBtn.disabled = true;
-                
-                // Clear addback fields and data
-                dynamicAddbackFields.innerHTML = '';
-                addbackData = {};
-                
-                // Clear first addback dropdown
-                const firstAddbackSelect = document.querySelector('.addback-type');
-                if (firstAddbackSelect) {
-                    firstAddbackSelect.value = '';
-                }
-                
-                // Reset dates
-                const today = new Date();
-                disbursalDateInput.value = today.toISOString().split('T')[0];
-                const nextMonth = new Date(today);
-                nextMonth.setMonth(nextMonth.getMonth() + 1);
-                firstPaymentDateInput.value = nextMonth.toISOString().split('T')[0];
-                updateDaysBetween(); // Calculate days between
-                
-                // Reset saved profiles dropdown
-                savedProfilesSelect.value = '';
-                
-                // Hide sections
-                emiChartSection.classList.add('hidden');
-                loanComparisonModal.classList.add('hidden');
-                
-                // Remove any warning flashes
-                dbrCalculatorSection.classList.remove('dbr-warning-flash');
-                emiCalculatorSection.classList.remove('dbr-warning-flash');
-                
-                // Remove high DBR styling
-                dbrPercentageInput.classList.remove('dbr-high');
-                
-                // Update calculations
-                updateDBRCalculator();
-                updateEMICalculator();
-            });
-            
-            // Send to WhatsApp button
-            sendWhatsAppBtn.addEventListener('click', function() {
-                const phoneNumber = whatsappNumberInput.value.replace(/\D/g, '');
-                if (!phoneNumber) {
-                    alert('Please Enter A Valid WhatsApp Number');
+            // Function to find the optimal loan amount
+            function findOptimalLoan() {
+                const availableLiability = parseFloat(availableLiabilityInput.value.replace(/,/g, '')) || 0;
+                if (availableLiability <= 0) {
+                    alert("No available liability to calculate optimal loan.");
                     return;
                 }
                 
-                const message = prepareWhatsAppMessage();
-                window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
-            });
+                const tenure = parseInt(tenureMonthsInput.value) || 48;
+                const rate = parseFloat(reducingRateInput.value) || 10;
+                const monthlyRate = rate / 1200; // Convert to monthly decimal
+                
+                let low = 0;
+                let high = parseFloat(maxLoanEligibilityInput.value.replace(/,/g, '')) || 1000000;
+                let optimalAmount = 0;
+                
+                // Binary search to find the optimal loan amount
+                while (high - low > 10) { // Tolerance of 10 AED
+                    const mid = (low + high) / 2;
+                    const emi = calculateEMI(mid, monthlyRate, tenure);
+                    
+                    if (emi <= availableLiability) {
+                        // We can go higher
+                        low = mid;
+                        optimalAmount = mid;
+                    } else {
+                        // Too high, need to go lower
+                        high = mid;
+                    }
+                }
+                
+                // Round down to nearest 1000
+                optimalAmount = Math.floor(optimalAmount / 1000) * 1000;
+                
+                // Set the optimal amount
+                loanAmountInput.value = optimalAmount;
+                
+                // Recalculate
+                calculateEligibility();
+            }
             
-            // Print button
-            printBtn.addEventListener('click', printPage);
+            // Function to generate EMI schedule
+            function generateEMISchedule() {
+                const principal = parseFloat(loanAmountInput.value) || 0;
+                const tenure = parseInt(tenureMonthsInput.value) || 0;
+                const reducingRate = parseFloat(reducingRateInput.value) || 0;
+                const monthlyRate = reducingRate / 1200;
+                const emi = parseFloat(emiInput.value.replace(/,/g, '')) || 0;
+                
+                if (principal <= 0 || tenure <= 0 || emi <= 0) {
+                    return [];
+                }
+                
+                const schedule = [];
+                let remainingPrincipal = principal;
+                
+                for (let month = 1; month <= tenure; month++) {
+                    // Calculate interest for the month
+                    const interestPayment = remainingPrincipal * monthlyRate;
+                    
+                    // Calculate principal for the month
+                    const principalPayment = emi - interestPayment;
+                    
+                    // Update remaining principal
+                    remainingPrincipal = Math.max(0, remainingPrincipal - principalPayment);
+                    
+                    schedule.push({
+                        month,
+                        emi,
+                        principalPayment,
+                        interestPayment,
+                        balance: remainingPrincipal
+                    });
+                    
+                    // Break if balance becomes zero or negative
+                    if (remainingPrincipal <= 0) break;
+                }
+                
+                return schedule;
+            }
             
-            // Export PDF button
-            exportPdfBtn.addEventListener('click', exportPDF);
+            // Function to display EMI schedule
+            function displayEMISchedule() {
+                const schedule = generateEMISchedule();
+                
+                // Clear previous table data
+                emiScheduleBody.innerHTML = '';
+                
+                // Create chart data
+                const principalData = [];
+                const interestData = [];
+                const labels = [];
+                
+                // Fill table and collect chart data
+                schedule.forEach(entry => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="border border-gray-300 p-2 dark:text-white">${entry.month}</td>
+                        <td class="border border-gray-300 p-2 dark:text-white">${formatNumber(entry.emi.toFixed(2))}</td>
+                        <td class="border border-gray-300 p-2 dark:text-white">${formatNumber(entry.principalPayment.toFixed(2))}</td>
+                        <td class="border border-gray-300 p-2 dark:text-white">${formatNumber(entry.interestPayment.toFixed(2))}</td>
+                        <td class="border border-gray-300 p-2 dark:text-white">${formatNumber(entry.balance.toFixed(2))}</td>
+                    `;
+                    emiScheduleBody.appendChild(row);
+                    
+                    // Add data for chart (at regular intervals to avoid crowding)
+                    if (entry.month === 1 || entry.month % Math.ceil(schedule.length / 20) === 0 || entry.month === schedule.length) {
+                        labels.push(entry.month);
+                        principalData.push(entry.principalPayment);
+                        interestData.push(entry.interestPayment);
+                    }
+                });
+                
+                // Create or update chart
+                const ctx = document.getElementById('emiChart').getContext('2d');
+                
+                if (emiChart) {
+                    emiChart.destroy();
+                }
+                
+                emiChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'Principal',
+                                data: principalData,
+                                backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                                borderColor: 'rgba(54, 162, 235, 1)',
+                                borderWidth: 1
+                            },
+                            {
+                                label: 'Interest',
+                                data: interestData,
+                                backgroundColor: 'rgba(255, 99, 132, 0.7)',
+                                borderColor: 'rgba(255, 99, 132, 1)',
+                                borderWidth: 1
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Month'
+                                },
+                                ticks: {
+                                    color: document.documentElement.classList.contains('dark') ? '#fff' : '#666'
+                                },
+                                grid: {
+                                    color: document.documentElement.classList.contains('dark') ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Amount (AED)'
+                                },
+                                ticks: {
+                                    color: document.documentElement.classList.contains('dark') ? '#fff' : '#666'
+                                },
+                                grid: {
+                                    color: document.documentElement.classList.contains('dark') ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: document.documentElement.classList.contains('dark') ? '#fff' : '#666'
+                                }
+                            }
+                        }
+                    }
+                });
+                
+                // Show EMI chart section
+                emiChartSection.classList.remove('hidden');
+                
+                // Scroll to chart
+                emiChartSection.scrollIntoView({ behavior: 'smooth' });
+            }
             
-            // Initialize calculations
-            updateGrossSalary();
-            updateDBRCalculator();
-            updateEMICalculator();
+            // Function to calculate comparison
+            function calculateComparison() {
+                // Get values for Bank 1
+                const bank1Name = bank1NameInput.value || 'Bank 1';
+                const bank1Amount = parseFloat(bank1LoanAmountInput.value) || 0;
+                const bank1Tenure = parseInt(bank1TenureInput.value) || 0;
+                const bank1Rate = parseFloat(bank1RateInput.value) || 0;
+                
+                // Get values for Bank 2
+                const bank2Name = bank2NameInput.value || 'Bank 2';
+                const bank2Amount = parseFloat(bank2LoanAmountInput.value) || 0;
+                const bank2Tenure = parseInt(bank2TenureInput.value) || 0;
+                const bank2Rate = parseFloat(bank2RateInput.value) || 0;
+                
+                // Calculate EMI for both banks
+                if (bank1Amount > 0 && bank1Tenure > 0) {
+                    const bank1MonthlyRate = bank1Rate / 1200;
+                    const bank1EMI = calculateEMI(bank1Amount, bank1MonthlyRate, bank1Tenure);
+                    bank1EMIInput.value = formatNumber(bank1EMI.toFixed(2));
+                    
+                    const bank1TotalInterest = (bank1EMI * bank1Tenure) - bank1Amount;
+                    bank1TotalInterestInput.value = formatNumber(bank1TotalInterest.toFixed(2));
+                }
+                
+                if (bank2Amount > 0 && bank2Tenure > 0) {
+                    const bank2MonthlyRate = bank2Rate / 1200;
+                    const bank2EMI = calculateEMI(bank2Amount, bank2MonthlyRate, bank2Tenure);
+                    bank2EMIInput.value = formatNumber(bank2EMI.toFixed(2));
+                    
+                    const bank2TotalInterest = (bank2EMI * bank2Tenure) - bank2Amount;
+                    bank2TotalInterestInput.value = formatNumber(bank2TotalInterest.toFixed(2));
+                }
+                
+                // Compare results
+                if (bank1Amount > 0 && bank1Tenure > 0 && bank2Amount > 0 && bank2Tenure > 0) {
+                    const bank1EMI = parseFloat(bank1EMIInput.value.replace(/,/g, ''));
+                    const bank2EMI = parseFloat(bank2EMIInput.value.replace(/,/g, ''));
+                    
+                    const bank1TotalInterest = parseFloat(bank1TotalInterestInput.value.replace(/,/g, ''));
+                    const bank2TotalInterest = parseFloat(bank2TotalInterestInput.value.replace(/,/g, ''));
+                    
+                    // Build comparison result message
+                    let resultHTML = '';
+                    
+                    // Compare EMIs
+                    if (bank1EMI < bank2EMI) {
+                        resultHTML += `<p class="mb-2">${bank1Name} offers a lower monthly payment (EMI) of AED ${formatNumber(bank1EMI.toFixed(2))}, which is AED ${formatNumber((bank2EMI - bank1EMI).toFixed(2))} (${((bank2EMI - bank1EMI) / bank2EMI * 100).toFixed(2)}%) less than ${bank2Name}.</p>`;
+                    } else if (bank2EMI < bank1EMI) {
+                        resultHTML += `<p class="mb-2">${bank2Name} offers a lower monthly payment (EMI) of AED ${formatNumber(bank2EMI.toFixed(2))}, which is AED ${formatNumber((bank1EMI - bank2EMI).toFixed(2))} (${((bank1EMI - bank2EMI) / bank1EMI * 100).toFixed(2)}%) less than ${bank1Name}.</p>`;
+                    } else {
+                        resultHTML += `<p class="mb-2">Both banks offer the same monthly payment (EMI) of AED ${formatNumber(bank1EMI.toFixed(2))}.</p>`;
+                    }
+                    
+                    // Compare total interest
+                    if (bank1TotalInterest < bank2TotalInterest) {
+                        resultHTML += `<p class="mb-2">${bank1Name} has a lower total interest cost of AED ${formatNumber(bank1TotalInterest.toFixed(2))}, saving you AED ${formatNumber((bank2TotalInterest - bank1TotalInterest).toFixed(2))} compared to ${bank2Name}.</p>`;
+                    } else if (bank2TotalInterest < bank1TotalInterest) {
+                        resultHTML += `<p class="mb-2">${bank2Name} has a lower total interest cost of AED ${formatNumber(bank2TotalInterest.toFixed(2))}, saving you AED ${formatNumber((bank1TotalInterest - bank2TotalInterest).toFixed(2))} compared to ${bank1Name}.</p>`;
+                    } else {
+                        resultHTML += `<p class="mb-2">Both banks have the same total interest cost of AED ${formatNumber(bank1TotalInterest.toFixed(2))}.</p>`;
+                    }
+                    
+                    // Recommend based on total cost
+                    if (bank1TotalInterest < bank2TotalInterest) {
+                        resultHTML += `<p class="mt-4 font-bold">${bank1Name} offers better value in terms of total cost.</p>`;
+                    } else if (bank2TotalInterest < bank1TotalInterest) {
+                        resultHTML += `<p class="mt-4 font-bold">${bank2Name} offers better value in terms of total cost.</p>`;
+                    } else {
+                        resultHTML += `<p class="mt-4 font-bold">Both banks offer identical terms.</p>`;
+                    }
+                    
+                    comparisonResultDiv.innerHTML = resultHTML;
+                } else {
+                    comparisonResultDiv.innerHTML = "Please enter details for both banks to compare.";
+                }
+            }
+            
+            // Function to save profile
+            function saveProfile() {
+                const customerName = customerNameInput.value.trim();
+                if (!customerName) {
+                    alert("Please enter a customer name before saving.");
+                    return;
+                }
+                
+                // Collect data
+                const profileData = {
+                    salary: salaryInput.value,
+                    grossSalary: grossSalaryInput.value,
+                    allowedLiability: allowedLiabilityInput.value,
+                    dbrPercentage: dbrPercentageInput.value,
+                    totalCCLimit: totalCCLimitInput.value,
+                    dbrCC: dbrCCInput.value,
+                    totalLiabilities: totalLiabilitiesInput.value,
+                    availableLiability: availableLiabilityInput.value,
+                    totalOutstanding: totalOutstandingInput.value,
+                    loanType: loanTypeSelect.value,
+                    multiplesOfSalary: multiplesOfSalaryInput.value,
+                    maxLoanEligibility: maxLoanEligibilityInput.value,
+                    tenureMonths: tenureMonthsInput.value,
+                    loanAmount: loanAmountInput.value,
+                    reducingRate: reducingRateInput.value,
+                    flatRate: flatRateInput.value,
+                    emi: emiInput.value,
+                    totalPayment: totalPaymentInput.value,
+                    totalInterest: totalInterestInput.value,
+                    processingFees: processingFeesInput.value,
+                    cashInHand: cashInHandInput.value,
+                    specialNote: specialNoteInput.value,
+                    timestamp: new Date().toISOString()
+                };
+                
+                // Save to localStorage
+                localStorage.setItem(`profile_${customerName}`, JSON.stringify(profileData));
+                
+                // Reload profiles
+                loadSavedProfiles();
+                
+                // Select the newly added profile
+                savedProfilesSelect.value = customerName;
+                
+                alert(`Profile for "${customerName}" saved successfully.`);
+            }
+            
+            // Function to retrieve profile
+            function retrieveProfile() {
+                const selectedProfile = savedProfilesSelect.value;
+                if (!selectedProfile) {
+                    alert("Please select a profile to retrieve.");
+                    return;
+                }
+                
+                const profileData = JSON.parse(localStorage.getItem(`profile_${selectedProfile}`));
+                if (!profileData) {
+                    alert("Profile not found.");
+                    return;
+                }
+                
+                // Set customer name
+                customerNameInput.value = selectedProfile;
+                
+                // Fill all fields with saved data
+                salaryInput.value = profileData.salary || '';
+                loanTypeSelect.value = profileData.loanType || 'fresh-0-30';
+                multiplesOfSalaryInput.value = profileData.multiplesOfSalary || '15';
+                tenureMonthsInput.value = profileData.tenureMonths || '48';
+                loanAmountInput.value = profileData.loanAmount || '';
+                reducingRateInput.value = profileData.reducingRate || '10';
+                specialNoteInput.value = profileData.specialNote || '';
+                
+                // Calculate to update all derived fields
+                calculateEligibility();
+            }
+            
+            // Function to delete profile
+            function deleteProfile() {
+                const selectedProfile = savedProfilesSelect.value;
+                if (!selectedProfile) {
+                    alert("Please select a profile to delete.");
+                    return;
+                }
+                
+                if (confirm(`Are you sure you want to delete the profile for "${selectedProfile}"?`)) {
+                    localStorage.removeItem(`profile_${selectedProfile}`);
+                    loadSavedProfiles();
+                    alert(`Profile "${selectedProfile}" has been deleted.`);
+                }
+            }
+            
+            // Function to reset all fields
+            function resetAllFields() {
+                if (confirm("Are you sure you want to reset all fields?")) {
+                    // Reset all input fields
+                    document.querySelectorAll('input[type="number"], input[type="text"]:not([readonly])').forEach(input => {
+                        input.value = '';
+                    });
+                    
+                    // Reset selects to first option
+                    document.querySelectorAll('select').forEach(select => {
+                        if (select.id !== 'savedProfiles') {
+                            select.selectedIndex = 0;
+                        }
+                    });
+                    
+                    // Set defaults
+                    tenureMonthsInput.value = "48";
+                    reducingRateInput.value = "10";
+                    multiplesOfSalaryInput.value = "15";
+                    
+                    // Reset credit cards to just one
+                    while (creditCardCount > 1) {
+                        removeLastCreditCard();
+                    }
+                    
+                    // Reset credit card inputs
+                    document.querySelectorAll('.credit-card-amount, .credit-card-outstanding').forEach(input => {
+                        input.value = '';
+                    });
+                    
+                    // Reset card settled states
+                    cardSettleStates = [false];
+                    document.querySelectorAll('.credit-card-entry').forEach(card => {
+                        card.classList.remove('card-settled');
+                        const settleBtn = card.querySelector('.settle-card-btn');
+                        if (settleBtn) settleBtn.textContent = 'Settle';
+                    });
+                    
+                    // Clear existing loans
+                    existingLoansContainer.innerHTML = '';
+                    existingLoansContainer.classList.add('hidden');
+                    loanEntryCount = 0;
+                    
+                    // Hide credit card suggestion
+                    ccSuggestionContainer.classList.add('hidden');
+                    
+                    // Hide errors
+                    loanAmountError.classList.add('hidden');
+                    loanAmountInput.classList.remove('dbr-warning-flash');
+                    
+                    // Recalculate
+                    calculateEligibility();
+                }
+            }
+            
+            // Function to setup event listeners
+            function setupEventListeners() {
+                // Salary and add-backs
+                salaryInput.addEventListener('input', calculateEligibility);
+                
+                // Add more add-back fields
+                addMoreAddbackBtn.addEventListener('click', function() {
+                    addbackEntryCount++;
+                    removeAddbackBtn.disabled = false;
+                    
+                    const addbackEntry = document.createElement('div');
+                    addbackEntry.className = 'grid grid-cols-3 gap-3 items-center addback-entry';
+                    addbackEntry.innerHTML = `
+                        <label class="text-gray-700 dark:text-gray-300 font-medium">Add-back ${addbackEntryCount}:</label>
+                        <div class="col-span-2">
+                            <select class="addback-type border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white w-full">
+                                <option value="">Select Add-back Type</option>
+                                <option value="hra">HRA</option>
+                                <option value="airfare">Airfare Allowance</option>
+                                <option value="overtime">Over-time</option>
+                                <option value="servicecharge">Service Charge</option>
+                                <option value="incentives">Incentives</option>
+                                <option value="telephone">Telephone Allowance</option>
+                            </select>
+                        </div>
+                    `;
+                    
+                    addbacksContainer.appendChild(addbackEntry);
+                    
+                    // Add event listener to the select
+                    const select = addbackEntry.querySelector('.addback-type');
+                    select.addEventListener('change', function() {
+                        // If a type is selected, add an amount field
+                        if (this.value) {
+                            // Check if there's already an amount field
+                            const nextElement = addbackEntry.nextElementSibling;
+                            if (!nextElement || !nextElement.classList.contains('addback-amount-entry')) {
+                                const amountEntry = document.createElement('div');
+                                amountEntry.className = 'grid grid-cols-3 gap-3 items-center addback-amount-entry';
+                                amountEntry.innerHTML = `
+                                    <div class="col-span-1"></div>
+                                    <div class="col-span-2">
+                                        <input type="number" placeholder="${this.options[this.selectedIndex].text} Amount" class="addback-amount border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white w-full">
+                                    </div>
+                                `;
+                                
+                                // Insert after the select
+                                addbackEntry.parentNode.insertBefore(amountEntry, addbackEntry.nextSibling);
+                                
+                                // Add event listener to amount field
+                                const amountInput = amountEntry.querySelector('.addback-amount');
+                                amountInput.addEventListener('input', calculateEligibility);
+                            }
+                        } else {
+                            // Remove amount field if it exists
+                            const nextElement = addbackEntry.nextElementSibling;
+                            if (nextElement && nextElement.classList.contains('addback-amount-entry')) {
+                                nextElement.remove();
+                            }
+                        }
+                        
+                        calculateEligibility();
+                    });
+                });
+                
+                // Remove add-back field
+                removeAddbackBtn.addEventListener('click', function() {
+                    if (addbackEntryCount > 1) {
+                        // Find the last add-back entry
+                        const entries = addbacksContainer.querySelectorAll('.addback-entry');
+                        const lastEntry = entries[entries.length - 1];
+                        
+                        // Check if it has an amount field
+                        const nextElement = lastEntry.nextElementSibling;
+                        if (nextElement && nextElement.classList.contains('addback-amount-entry')) {
+                            nextElement.remove();
+                        }
+                        
+                        // Remove the add-back entry
+                        lastEntry.remove();
+                        
+                        addbackEntryCount--;
+                        removeAddbackBtn.disabled = addbackEntryCount <= 1;
+                        
+                        calculateEligibility();
+                    }
+                });
+                
+                // Add event listener to the initial add-back select
+                const initialSelect = addbacksContainer.querySelector('.addback-type');
+                initialSelect.addEventListener('change', function() {
+                    // If a type is selected, add an amount field
+                    if (this.value) {
+                        // Check if there's already an amount field
+                        const addbackEntry = this.closest('.addback-entry');
+                        const nextElement = addbackEntry.nextElementSibling;
+                        if (!nextElement || !nextElement.classList.contains('addback-amount-entry')) {
+                            const amountEntry = document.createElement('div');
+                            amountEntry.className = 'grid grid-cols-3 gap-3 items-center addback-amount-entry';
+                            amountEntry.innerHTML = `
+                                <div class="col-span-1"></div>
+                                <div class="col-span-2">
+                                    <input type="number" placeholder="${this.options[this.selectedIndex].text} Amount" class="addback-amount border rounded-md p-2 text-base dark:bg-gray-800 dark:text-white w-full">
+                                </div>
+                            `;
+                            
+                            // Insert after the select
+                            addbackEntry.parentNode.insertBefore(amountEntry, addbackEntry.nextSibling);
+                            
+                            // Add event listener to amount field
+                            const amountInput = amountEntry.querySelector('.addback-amount');
+                            amountInput.addEventListener('input', calculateEligibility);
+                        }
+                    } else {
+                        // Remove amount field if it exists
+                        const addbackEntry = this.closest('.addback-entry');
+                        const nextElement = addbackEntry.nextElementSibling;
+                        if (nextElement && nextElement.classList.contains('addback-amount-entry')) {
+                            nextElement.remove();
+                        }
+                    }
+                    
+                    calculateEligibility();
+                });
+                
+                // Add existing loan
+                addExistingLoanBtn.addEventListener('click', addExistingLoanEntry);
+                
+                // Credit cards
+                addCreditCardBtn.addEventListener('click', addCreditCardEntry);
+                removeCreditCardBtn.addEventListener('click', removeLastCreditCard);
+                
+                // Add event listener to initial card settle button
+                const initialSettleBtn = document.querySelector('.settle-card-btn');
+                initialSettleBtn.addEventListener('click', function() {
+                    toggleCardSettled(this.closest('.credit-card-entry'), 0);
+                });
+                
+                // Add event listeners to initial card inputs
+                const initialCardInputs = document.querySelectorAll('.credit-card-amount, .credit-card-outstanding');
+                initialCardInputs.forEach(input => {
+                    input.addEventListener('input', calculateEligibility);
+                });
+                
+                // DBR rate toggle
+                dbrRateToggle.addEventListener('change', calculateEligibility);
+                
+                // EMI calculator inputs
+                multiplesOfSalaryInput.addEventListener('input', calculateEligibility);
+                loanAmountInput.addEventListener('input', calculateEligibility);
+                tenureMonthsInput.addEventListener('input', calculateEligibility);
+                reducingRateInput.addEventListener('input', calculateEligibility);
+                
+                // Dates
+                disbursalDateInput.addEventListener('change', calculateDaysBetween);
+                firstPaymentDateInput.addEventListener('change', calculateDaysBetween);
+                
+                // Buttons
+                findOptimalLoanBtn.addEventListener('click', findOptimalLoan);
+                resetBtn.addEventListener('click', resetAllFields);
+                showEmiChartBtn.addEventListener('click', displayEMISchedule);
+                saveProfileBtn.addEventListener('click', saveProfile);
+                retrieveProfileBtn.addEventListener('click', retrieveProfile);
+                deleteProfileBtn.addEventListener('click', deleteProfile);
+                
+                // Loan comparison
+                loanComparisonBtn.addEventListener('click', function() {
+                    loanComparisonModal.classList.remove('hidden');
+                    
+                    // Pre-fill with current loan details if available
+                    if (loanAmountInput.value) {
+                        bank1NameInput.value = "Current Bank";
+                        bank1LoanAmountInput.value = loanAmountInput.value;
+                        bank1TenureInput.value = tenureMonthsInput.value;
+                        bank1RateInput.value = reducingRateInput.value;
+                    }
+                    
+                    calculateComparison();
+                });
+                
+                closeComparisonModal.addEventListener('click', function() {
+                    loanComparisonModal.classList.add('hidden');
+                });
+                
+                // Comparison calculator inputs
+                bank1LoanAmountInput.addEventListener('input', calculateComparison);
+                bank1TenureInput.addEventListener('input', calculateComparison);
+                bank1RateInput.addEventListener('input', calculateComparison);
+                bank2LoanAmountInput.addEventListener('input', calculateComparison);
+                bank2TenureInput.addEventListener('input', calculateComparison);
+                bank2RateInput.addEventListener('input', calculateComparison);
+                
+                // Special note input
+                specialNoteInput.addEventListener('input', function() {
+                    localStorage.setItem('specialNote', this.value);
+                });
+                
+                // Load special note from localStorage if available
+                const savedNote = localStorage.getItem('specialNote');
+                if (savedNote) {
+                    specialNoteInput.value = savedNote;
+                }
+                
+                // Print button
+                printBtn.addEventListener('click', function() {
+                    window.print();
+                });
+                
+                // Export PDF button
+                exportPdfBtn.addEventListener('click', function() {
+                    const { jsPDF } = window.jspdf;
+                    
+                    // Create new PDF document
+                    const doc = new jsPDF({
+                        orientation: 'portrait',
+                        unit: 'mm',
+                        format: 'a4'
+                    });
+                    
+                    // Get the printable area
+                    const element = document.getElementById('printableArea');
+                    
+                    // Use html2canvas to capture the element
+                    html2canvas(element, {
+                        scale: 2,
+                        useCORS: true,
+                        logging: false
+                    }).then(canvas => {
+                        const imgData = canvas.toDataURL('image/png');
+                        const imgWidth = 210; // A4 width in mm
+                        const pageHeight = 297; // A4 height in mm
+                        const imgHeight = canvas.height * imgWidth / canvas.width;
+                        let heightLeft = imgHeight;
+                        let position = 0;
+                        
+                        // Add first page
+                        doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                        heightLeft -= pageHeight;
+                        
+                        // Add subsequent pages if needed
+                        while (heightLeft > 0) {
+                            position = heightLeft - imgHeight;
+                            doc.addPage();
+                            doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                            heightLeft -= pageHeight;
+                        }
+                        
+                        // Save the PDF
+                        const customerName = customerNameInput.value.trim() || 'Customer';
+                        doc.save(`${customerName}_Eligibility_Check.pdf`);
+                    });
+                });
+                
+                // WhatsApp button
+                sendWhatsAppBtn.addEventListener('click', function() {
+                    const whatsappNumber = whatsappNumberInput.value.trim();
+                    if (!whatsappNumber) {
+                        alert("Please enter a WhatsApp number.");
+                        return;
+                    }
+                    
+                    // Format the message
+                    let message = "Customer Eligibility Check\n\n";
+                    
+                    // Add customer name if available
+                    if (customerNameInput.value) {
+                        message += `Customer: ${customerNameInput.value}\n\n`;
+                    }
+                    
+                    // Add DBR details
+                    message += "DBR DETAILS:\n";
+                    message += `Salary: AED ${salaryInput.value || "0"}\n`;
+                    message += `Gross Salary: ${grossSalaryInput.value || "0"}\n`;
+                    message += `DBR %: ${dbrPercentageInput.value || "0%"}\n`;
+                    message += `Total Liabilities: ${totalLiabilitiesInput.value || "0"}\n`;
+                    message += `Available Liability: ${availableLiabilityInput.value || "0"}\n\n`;
+                    
+                    // Add loan details
+                    message += "LOAN DETAILS:\n";
+                    message += `Max Eligibility: ${maxLoanEligibilityInput.value || "0"}\n`;
+                    message += `Loan Amount: AED ${loanAmountInput.value || "0"}\n`;
+                    message += `Tenure: ${tenureMonthsInput.value || "0"} months\n`;
+                    message += `Reducing Rate: ${reducingRateInput.value || "0"}%\n`;
+                    message += `EMI: ${emiInput.value || "0"}\n`;
+                    message += `Total Interest: ${totalInterestInput.value || "0"}\n`;
+                    message += `Cash In Hand: ${cashInHandInput.value || "0"}\n`;
+                    
+                    // Add special note if available
+                    if (specialNoteInput.value) {
+                        message += `\nNOTE: ${specialNoteInput.value}\n`;
+                    }
+                    
+                    // Encode the message for WhatsApp URL
+                    const encodedMessage = encodeURIComponent(message);
+                    
+                    // Create WhatsApp link
+                    const whatsappURL = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
+                    
+                    // Open WhatsApp
+                    window.open(whatsappURL, '_blank');
+                });
+            }
         });
     </script>
 </body>
