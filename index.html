@@ -232,6 +232,14 @@
                         <i class="fas fa-balance-scale"></i>
                         <span>Compare</span>
                     </button>
+                    <a href="advcalc.html" class="btn-icon bg-green-600 text-white hover:bg-opacity-80">
+                        <i class="fas fa-calculator"></i>
+                        <span>Advance Calculator</span>
+                    </a>
+                    <a href="rategrid.html" class="btn-icon bg-indigo-600 text-white hover:bg-opacity-80">
+                        <i class="fas fa-table"></i>
+                        <span>Rate Grid</span>
+                    </a>
                 </div>
             </div>
         </div>
@@ -1562,16 +1570,17 @@
                 // Get current DBR percentage
                 const dbrPercentage = parseFloat(dbrPercentageInput.value) || 0;
                 
-                // Calculate optimal credit card limit using the formula: availableLiability / dbrRate * 100
-                const dbrRate = dbrRateToggle.checked ? 0.05 : 0.03;
-                const optimalCCLimit = availableLiability / dbrRate * 100;
+                // Calculate optimal credit card limit by dividing available liability by 3% or 5%
+                // Example: If available liability is 150 and rate is 3%, optimal limit = 150/(3/100) = 5000
+                const dbrRate = dbrRateToggle.checked ? 5 : 3;
+                const optimalCCLimit = availableLiability / (dbrRate/100);
                 
-                if (optimalCCLimit > availableLiability && dbrPercentage < 48.99) {
+                if (availableLiability > 0 && dbrPercentage < 49.95) {
                     ccSuggestionContainer.classList.remove('hidden');
-                    ccSuggestionText.textContent = (`Based on your available liability of AED ${formatNumber(availableLiability.toFixed(2))} and current DBR of ${dbrPercentage.toFixed(2)}%, the optimal credit card limit for you would be AED ${formatNumber(optimalCCLimit.toFixed(2))}. This would keep your dbr within the 49.99% limit.`);
+                    ccSuggestionText.textContent = (`Based on your available liability of AED ${formatNumber(availableLiability.toFixed(2))} and current DBR of ${dbrPercentage.toFixed(2)}%, the optimal credit card limit for you would be AED ${formatNumber(optimalCCLimit.toFixed(2))}. This would keep your DBR within the 49.95% limit.`);
                 } else {
                     ccSuggestionContainer.classList.remove('hidden');
-                    ccSuggestionText.textContent = (`Your current liabilities exceed or are close to the 49.99% DBR limit. It is not recommended to apply for any credit cards at this time.`);
+                    ccSuggestionText.textContent = (`Your current liabilities exceed or are close to the 49.95% DBR limit. It is not recommended to apply for any credit cards at this time.`);
                 }
             }
             
@@ -1744,15 +1753,15 @@
                             {
                                 label: 'Principal',
                                 data: principal,
-                                backgroundColor: '#2D336B',
-                                borderColor: '#262a5a',
+                                backgroundColor: '#00bfff',
+                                borderColor: '#008b8b',
                                 borderWidth: 1
                             },
                             {
                                 label: 'Interest',
                                 data: interest,
-                                backgroundColor: '#ffba08',
-                                borderColor: '#e85d04',
+                                backgroundColor: '#f783ac',
+                                borderColor: '#a61e4d',
                                 borderWidth: 1
                             }
                         ]
