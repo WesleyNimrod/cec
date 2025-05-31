@@ -67,6 +67,13 @@
         .dark .select2-container--default .select2-results__option--highlighted[aria-selected] {
             background-color: #4B5563;
         }
+        
+        /* Visual indicator for the matrix in the UI */
+        .na-cell {
+            background-color: black;
+            color: white;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 transition-colors duration-200 min-h-screen">
@@ -301,15 +308,6 @@
                                     <td class="border border-gray-300 dark:border-gray-600 p-2">7.00%</td>
                                     <td class="border border-gray-300 dark:border-gray-600 p-2">7.50%</td>
                                 </tr>
-                                
-                                <!-- Visual indicator for the matrix in the UI -->
-                                <style>
-                                    .na-cell {
-                                        background-color: black;
-                                        color: white;
-                                        font-weight: bold;
-                                    }
-                                </style>
                                 <tr class="text-center bg-gray-50 dark:bg-gray-700">
                                     <td class="border border-gray-300 dark:border-gray-600 p-2 font-medium">30K-50K</td>
                                     <td class="border border-gray-300 dark:border-gray-600 p-2">9.00%</td>
@@ -390,8 +388,9 @@
 
                 <!-- UAE Rate Grid -->
                 <div id="uaeRateGrid" class="hidden">
-                    <h3 class="text-center font-bold text-lg text-primary dark:text-white mb-3">UAE Nationals</h3>
-                    <div class="overflow-x-auto">
+                    <!-- Rate Information -->
+                    <h3 class="text-center font-bold text-lg text-primary dark:text-white mb-3">UAE Nationals - Interest Rates</h3>
+                    <div class="overflow-x-auto mb-6">
                         <table class="min-w-full border-collapse border border-gray-300 dark:border-gray-700">
                             <thead>
                                 <tr class="bg-secondary text-white text-center">
@@ -418,6 +417,225 @@
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+
+                    <!-- CAT A, B, C & D Table -->
+                    <h3 class="text-center font-bold text-lg text-primary dark:text-white mb-3">Decision Matrix - CAT A, B, C & D</h3>
+                    <div class="overflow-x-auto mb-6">
+                        <table class="min-w-full border-collapse border border-gray-300 dark:border-gray-700">
+                            <thead>
+                                <tr class="bg-secondary text-white text-center">
+                                    <th class="border border-gray-300 dark:border-gray-700 p-2" rowspan="2">ADCB Score</th>
+                                    <th class="border border-gray-300 dark:border-gray-700 p-2" colspan="6">ECB Score</th>
+                                </tr>
+                                <tr class="bg-secondary text-white text-center">
+                                    <th class="border border-gray-300 dark:border-gray-700 p-2">VHR</th>
+                                    <th class="border border-gray-300 dark:border-gray-700 p-2">HR</th>
+                                    <th class="border border-gray-300 dark:border-gray-700 p-2">MR</th>
+                                    <th class="border border-gray-300 dark:border-gray-700 p-2">LR</th>
+                                    <th class="border border-gray-300 dark:border-gray-700 p-2">VLR</th>
+                                    <th class="border border-gray-300 dark:border-gray-700 p-2">NS</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="text-center bg-gray-50 dark:bg-gray-700">
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2 font-medium">VHR</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2 na-cell">N/A</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2 na-cell">N/A</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">20x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">20x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">20x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">15x</td>
+                                </tr>
+                                <tr class="text-center">
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2 font-medium">HR</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2 na-cell">*15x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">20x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">20x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">20x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">20x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">15x</td>
+                                </tr>
+                                <tr class="text-center bg-gray-50 dark:bg-gray-700">
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2 font-medium">MR</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">20x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">20x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">20x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">20x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">20x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">20x</td>
+                                </tr>
+                                <tr class="text-center">
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2 font-medium">LR</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">20x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">20x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">20x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">20x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">20x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">20x</td>
+                                </tr>
+                                <tr class="text-center bg-gray-50 dark:bg-gray-700">
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2 font-medium">VLR</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">20x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">20x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">20x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">20x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">20x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">20x</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="text-sm dark:text-gray-300 mb-6">*Higher eligibility up to 20x if no 60dpd and above in the last 12 months</p>
+
+                    <!-- CAT E Table -->
+                    <h3 class="text-center font-bold text-lg text-primary dark:text-white mb-3">Decision Matrix - CAT E</h3>
+                    <div class="overflow-x-auto mb-6">
+                        <table class="min-w-full border-collapse border border-gray-300 dark:border-gray-700">
+                            <thead>
+                                <tr class="bg-secondary text-white text-center">
+                                    <th class="border border-gray-300 dark:border-gray-700 p-2" rowspan="2">ADCB Score</th>
+                                    <th class="border border-gray-300 dark:border-gray-700 p-2" colspan="6">ECB Score</th>
+                                </tr>
+                                <tr class="bg-secondary text-white text-center">
+                                    <th class="border border-gray-300 dark:border-gray-700 p-2">VHR</th>
+                                    <th class="border border-gray-300 dark:border-gray-700 p-2">HR</th>
+                                    <th class="border border-gray-300 dark:border-gray-700 p-2">MR</th>
+                                    <th class="border border-gray-300 dev">LR</th>
+                                    <th class="border border-gray-300 dark:border-gray-700 p-2">VLR</th>
+                                    <th class="border border-gray-300 dark:border-gray-700 p-2">NS</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="text-center bg-gray-50 dark:bg-gray-700">
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2 font-medium">VHR</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2 na-cell">*10x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2 na-cell">*10x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">15x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">20x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">20x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">10x</td>
+                                </tr>
+                                <tr class="text-center">
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2 font-medium">HR</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2 na-cell">*10x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2 na-cell">*10x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">15x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">20x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">20x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">10x</td>
+                                </tr>
+                                <tr class="text-center bg-gray-50 dark:bg-gray-700">
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2 font-medium">MR</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">15x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">15x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">20x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">20x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">20x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">15x</td>
+                                </tr>
+                                <tr class="text-center">
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2 font-medium">LR</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">20x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">20x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">20x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">20x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">20x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">20x</td>
+                                </tr>
+                                <tr class="text-center bg-gray-50 dark:bg-gray-700">
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2 font-medium">VLR</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">20x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">20x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">20x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">20x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">20x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">20x</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="text-sm dark:text-gray-300 mb-6">*Higher eligibility up to 15x if no 60dpd and above in the last 12 months</p>
+
+                    <!-- Armed Forces and MOD Table -->
+                    <h3 class="text-center font-bold text-lg text-primary dark:text-white mb-3">Decision Matrix - Armed Forces and MOD</h3>
+                    <div class="overflow-x-auto mb-6">
+                        <table class="min-w-full border-collapse border border-gray-300 dark:border-gray-700">
+                            <thead>
+                                <tr class="bg-secondary text-white text-center">
+                                    <th class="border border-gray-300 dark:border-gray-700 p-2" rowspan="2">ADCB Score</th>
+                                    <th class="border border-gray-300 dark:border-gray-700 p-2" colspan="6">ECB Score</th>
+                                </tr>
+                                <tr class="bg-secondary text-white text-center">
+                                    <th class="border border-gray-300 dark:border-gray-700 p-2">VHR</th>
+                                    <th class="border border-gray-300 dark:border-gray-700 p-2">HR</th>
+                                    <th class="border border-gray-300 dark:border-gray-700 p-2">MR</th>
+                                    <th class="border border-gray-300 dark:border-gray-700 p-2">LR</th>
+                                    <th class="border border-gray-300 dark:border-gray-700 p-2">VLR</th>
+                                    <th class="border border-gray-300 dark:border-gray-700 p-2">NS</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="text-center bg-gray-50 dark:bg-gray-700">
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2 font-medium">VHR</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">*10x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">15x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">15x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">15x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">15x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">15x</td>
+                                </tr>
+                                <tr class="text-center">
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2 font-medium">HR</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">15x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">15x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">15x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">15x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">15x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">15x</td>
+                                </tr>
+                                <tr class="text-center bg-gray-50 dark:bg-gray-700">
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2 font-medium">MR</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">15x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">15x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">15x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">15x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">15x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">15x</td>
+                                </tr>
+                                <tr class="text-center">
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2 font-medium">LR</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">15x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">15x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">15x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">15x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">15x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">15x</td>
+                                </tr>
+                                <tr class="text-center bg-gray-50 dark:bg-gray-700">
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2 font-medium">VLR</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">15x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">15x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">15x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">15x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">15x</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 p-2">15x</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="text-sm dark:text-gray-300 mb-6">Higher eligibility up to 15x if no 60dpd and above in the last 12 months</p>
+                    <p class="text-sm dark:text-gray-300 font-medium">Maximum Multiples PIL + OD + SL should not exceed 20x for Salaried and 15x for Armed forces staff.</p>
+
+                    <!-- DBR Section -->
+                    <div class="mt-6 bg-gray-100 dark:bg-gray-700 p-4 rounded-md">
+                        <h3 class="font-bold text-lg text-primary dark:text-white mb-3">DBR (Debt Burden Ratio)</h3>
+                        <ul class="list-disc pl-5 space-y-2 dark:text-gray-300">
+                            <li>50% for Salaried customer</li>
+                            <li>30% for Pensioners</li>
+                            <li>DBR can go up to 60% for salaried customers with any UAE National Housing Programs. DBR excluding the EMI for Housing program should not exceed 50% in such cases. Documentary proof is required to confirm that customer is a beneficiary of UAE National Housing Program. Above is not applicable to Pensioner customers.</li>
+                            <li>Additionally, DBR can go up to 50% specifically for Pensioner customers with Sheikh Zayed Housing Program. DBR excluding the EMI for Sheikh Zayed Housing Program should not exceed 30% in such cases. This is only applicable to Pensioners who have availed Sheikh Zayed Housing Program and documentary proof is required to confirm that customer is a beneficiary of Sheikh Zayed Housing Program.</li>
+                        </ul>
                     </div>
                 </div>
             </div>
@@ -553,7 +771,7 @@
                 // Add header cell for ADCB Score
                 const cornerCell = document.createElement('th');
                 cornerCell.className = "border border-gray-300 dark:border-gray-700 p-2";
-                cornerCell.textContent = "ADCB Score ↓ ECB Score →";
+                cornerCell.textContent = "ADCB Score → ECB Score →";
                 headerRow.appendChild(cornerCell);
                 
                 // Add ECB score headers
@@ -631,7 +849,7 @@
                 allowClear: true
             });
 
-            // Create and add visual matrices
+            // Create and add visual matrices for non-UAE customers
             const matricesContainer = createVisualMultiplesMatrix();
             $('#nonUaeRateGrid').append(matricesContainer);
 
@@ -841,7 +1059,7 @@
                 
                 $('#finalRate').text(`${finalRate.toFixed(2)}%`);
                 
-                // Hide Max Multiples for UAE Nationals
+                // Hide Max Multiples for UAE Nationals (they have their own system)
                 $('#resultMaxMultiplesRow').hide();
                 $('#resultMaxLoanRow').hide();
             } else {
